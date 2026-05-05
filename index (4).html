@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Gaffa — Anttro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #2c3440;
+    --surface: rgba(255,255,255,0.06);
+    --surface2: rgba(255,255,255,0.1);
+    --border: rgba(255,255,255,0.1);
+    --border-hover: rgba(255,255,255,0.2);
+    --accent: #7ec8b0;
+    --accent-dim: #5aaa92;
+    --accent-glow: rgba(126,200,176,0.15);
+    --text: #f0f2f4;
+    --text-dim: #a8b4bc;
+    --text-muted: #6a7a84;
+    --user-bubble: rgba(126,200,176,0.12);
+    --user-border: rgba(126,200,176,0.25);
+    --bot-bubble: rgba(255,255,255,0.05);
+    --bot-border: rgba(255,255,255,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background: #2c3440;
+    color: var(--text);
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bg-orb-1 {
+    position: fixed;
+    bottom: 15%;
+    left: 5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(82,140,160,0.35) 0%, rgba(60,110,130,0.15) 40%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(40px);
+  }
+
+  .bg-orb-2 {
+    position: fixed;
+    bottom: 10%;
+    left: 20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(180,150,80,0.2) 0%, rgba(160,120,60,0.08) 40%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(50px);
+  }
+
+  .bg-orb-3 {
+    position: fixed;
+    top: 20%;
+    right: 10%;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(ellipse, rgba(60,80,100,0.3) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(60px);
+  }
+
+  .header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(44,52,64,0.85);
+    backdrop-filter: blur(16px);
+    flex-shrink: 0;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 12px; }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  .header-title .brand {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    display: block;
+  }
+
+  .header-title .subtitle {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 1px;
+  }
+
+  .anttro-brand {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    z-index: 1;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .messages::-webkit-scrollbar { width: 3px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .message-group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 14px; }
+
+  .message {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    animation: fadeUp 0.25s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+    font-family: 'Open Sans', sans-serif;
+  }
+
+  .avatar.bot { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: var(--text); }
+  .avatar.user { background: var(--user-bubble); border: 1px solid var(--user-border); color: var(--accent); }
+
+  .bubble {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 15px;
+    line-height: 1.65;
+    font-weight: 400;
+  }
+
+  .message.bot .bubble {
+    background: var(--bot-bubble);
+    border: 1px solid var(--bot-border);
+    border-bottom-left-radius: 4px;
+    color: var(--text);
+    backdrop-filter: blur(8px);
+  }
+
+  .message.user .bubble {
+    background: var(--user-bubble);
+    border: 1px solid var(--user-border);
+    border-bottom-right-radius: 4px;
+    color: var(--text);
+    backdrop-filter: blur(8px);
+  }
+
+  .typing { display: flex; gap: 10px; align-items: center; padding: 4px 0; animation: fadeUp 0.25s ease forwards; opacity: 0; }
+
+  .typing-dots {
+    display: flex;
+    gap: 5px;
+    padding: 12px 16px;
+    background: var(--bot-bubble);
+    border: 1px solid var(--bot-border);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    backdrop-filter: blur(8px);
+  }
+
+  .typing-dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: typingBounce 1.2s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  .timestamp { font-size: 10px; color: var(--text-muted); padding: 0 42px; margin-top: 3px; }
+  .timestamp.right { text-align: right; }
+
+  .input-area {
+    position: relative;
+    z-index: 10;
+    padding: 12px 16px 20px;
+    border-top: 1px solid var(--border);
+    background: rgba(44,52,64,0.9);
+    backdrop-filter: blur(16px);
+    flex-shrink: 0;
+  }
+
+  .input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 10px 10px 10px 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-wrapper:focus-within {
+    border-color: rgba(126,200,176,0.3);
+    box-shadow: 0 0 0 3px rgba(126,200,176,0.08);
+  }
+
+  textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    resize: none;
+    max-height: 120px;
+    min-height: 24px;
+  }
+
+  textarea::placeholder { color: var(--text-muted); }
+
+  .send-btn {
+    width: 40px;
+    height: 40px;
+    background: rgba(126,200,176,0.2);
+    border: 1px solid rgba(126,200,176,0.3);
+    border-radius: 12px;
+    color: var(--accent);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .send-btn:hover { background: rgba(126,200,176,0.3); }
+  .send-btn:active { transform: scale(0.95); }
+  .send-btn:disabled { background: rgba(255,255,255,0.04); border-color: var(--border); color: var(--text-muted); cursor: not-allowed; }
+  .send-btn svg { width: 16px; height: 16px; }
+
+  .input-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; text-align: center; }
+
+  /* Checkbox styles */
+  .checkbox-container {
+    background: var(--bot-bubble);
+    border: 1px solid var(--bot-border);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    padding: 16px;
+    max-width: 90%;
+    backdrop-filter: blur(8px);
+    width: 100%;
+  }
+
+  .checkbox-intro {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.65;
+    margin-bottom: 14px;
+  }
+
+  .checkbox-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 6px;
+    user-select: none;
+    min-height: 48px;
+  }
+
+  .checkbox-item:hover { background: rgba(255,255,255,0.06); }
+  .checkbox-item.selected { background: rgba(126,200,176,0.12); }
+
+  .checkbox-box {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    margin-top: 1px;
+  }
+
+  .checkbox-item.selected .checkbox-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .checkbox-item.selected .checkbox-box::after {
+    content: '';
+    width: 6px;
+    height: 10px;
+    border: 2px solid white;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg) translateY(-1px);
+    display: block;
+  }
+
+  .checkbox-label {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .checkbox-item.selected .checkbox-label { color: var(--text); }
+  .checkbox-label strong { color: var(--text); font-weight: 600; }
+
+  .checkbox-confirm {
+    margin-top: 14px;
+    padding: 14px 18px;
+    background: rgba(126,200,176,0.2);
+    border: 1px solid rgba(126,200,176,0.3);
+    border-radius: 12px;
+    color: var(--accent);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Open Sans', sans-serif;
+    transition: all 0.2s;
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .checkbox-confirm:hover { background: rgba(126,200,176,0.3); }
+  .checkbox-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Slide preview */
+  .slides-container {
+    background: var(--bot-bubble);
+    border: 1px solid var(--bot-border);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    padding: 16px;
+    width: 100%;
+    max-width: 100%;
+    backdrop-filter: blur(8px);
+    animation: fadeUp 0.3s ease forwards;
+    opacity: 0;
+  }
+
+  .slides-header {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.65;
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+
+  .slides-iframe-wrapper {
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #1a1a1a;
+    position: relative;
+    padding-bottom: 62%;
+    height: 0;
+    margin-bottom: 14px;
+    max-height: 280px;
+  }
+
+  .slides-iframe-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
+
+
+  .slides-btn {
+    display: block;
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Open Sans', sans-serif;
+    transition: all 0.2s;
+    text-align: center;
+    margin-bottom: 10px;
+    min-height: 52px;
+    border: none;
+    text-decoration: none;
+  }
+
+  .slides-btn-download {
+    background: rgba(126,200,176,0.2);
+    border: 1px solid rgba(126,200,176,0.3) !important;
+    color: var(--accent);
+  }
+
+  .slides-btn-download:hover { background: rgba(126,200,176,0.3); }
+
+  .slides-btn-submit {
+    background: var(--accent);
+    color: white;
+  }
+
+  .slides-btn-submit:hover { background: var(--accent-dim); }
+  .slides-btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Loading state */
+  .loading-container {
+    background: var(--bot-bubble);
+    border: 1px solid var(--bot-border);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    padding: 20px 16px;
+    backdrop-filter: blur(8px);
+    text-align: center;
+    animation: fadeUp 0.25s ease forwards;
+    opacity: 0;
+  }
+
+  .loading-text {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .loading-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .loading-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: typingBounce 1.2s infinite;
+  }
+
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  .error-msg {
+    background: rgba(192,57,43,0.1);
+    border: 1px solid rgba(192,57,43,0.25);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #e74c3c;
+    margin: 0 0 10px;
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-orb-1"></div>
+<div class="bg-orb-2"></div>
+<div class="bg-orb-3"></div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">A.</div>
+    <div class="header-title">
+      <span class="brand">The Gaffa</span>
+      <span class="subtitle">Straight talking problem solving</span>
+    </div>
+  </div>
+  <div class="anttro-brand">Anttro.</div>
+</div>
+
+<div id="errorMsg" class="error-msg" style="display:none;"></div>
+
+<div class="messages" id="messages"></div>
+
+<div class="input-area">
+  <div class="input-wrapper">
+    <textarea
+      id="userInput"
+      placeholder="Type your message..."
+      rows="1"
+      onkeydown="handleKey(event)"
+      oninput="autoResize(this)"
+    ></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </div>
+  <div class="input-hint">Enter to send · Shift+Enter for new line</div>
+</div>
+
+<script>
+const API_KEY = localStorage.getItem('gaffa_api_key') || '';
+const MAKE_WEBHOOK = 'https://hook.eu1.make.com/8lpfhpcs8xx5qlazcwqyyz6rdyw407w8';
+
+const SYSTEM_PROMPT = `You are The Gaffa. You help people log problems quickly and clearly so something actually gets done about them.
+
+You know lean methodology and problem solving inside out but you never show it. To the person you're talking to you're just a knowledgeable colleague who gets it and asks the right questions.
+
+You are not a form. You are not a chatbot. You are The Gaffa.
+
+Your Personality:
+Short sentences. Plain language. Warm but direct. You sound like the most experienced person in the room, not a consultant or a computer. No long dashes. No formal phrasing. No corporate language. Talk like a real person having a quick chat.
+
+Examples of the right tone:
+Instead of "I understand, that must be frustrating" say "Yeah that's a pain."
+Instead of "Thank you for providing that information" say "Got it."
+Instead of "Could you elaborate further" say "Tell me a bit more about that."
+Keep every message as short as possible. One or two sentences maximum per response unless presenting a list.
+Never say "Fair enough." Never say "That's helpful" or "Great" or any hollow filler phrase.
+Short answers are valid. Accept them and move on.
+One word acknowledgements are fine. "Got it." "Right." "Noted." Then next question.
+
+CRITICAL RULE: Before asking any question you MUST check whether the user has already provided that information anywhere in the conversation. If they mentioned the location, area, time, frequency, or impact in ANY previous message do NOT ask for it again. Extract it silently and move on. Asking for information already provided is a serious failure. If you catch yourself about to ask something already answered, skip it entirely and move to the next genuinely missing piece of information.
+
+Your Rules:
+Always ask one question at a time. Never combine two questions into one message.
+Never summarise or repeat back what the user just said before asking the next question.
+Never use lean terminology. No Ishikawa, 5 Whys, waste types, Kaizen, PDCA. Ever.
+Never invent facts or add information the user hasn't given you.
+Only use location and area words the user has actually used.
+Never rush anyone. A complete accurate Snapshot matters more than a fast one.
+Never probe the same point more than once.
+Never blame individuals or suggest personal fault.
+Always make the user feel like raising this was the right thing to do.
+
+Your Conversation Flow:
+Phase one — Name and role.
+Start with exactly this: "Alright, let's get this logged. What's your name?"
+Once they answer ask "And what's your role?"
+
+Phase two — What is happening.
+Ask what the problem is. If not already mentioned ask which area, team, or department. Ask how often.
+
+Phase three — What is the impact.
+Ask what happens when it occurs and the impact on time, quality, or the team. One question only. Once you have any indication of impact move on. Ask how long it has been going on. Then move to phase four.
+
+Phase four — Contributing factors.
+Say exactly this: "What do you reckon is playing a part in this? Pick everything that feels relevant. [CHECKBOX_ISHIKAWA]" Then list:
+- People — the way the team work or their training
+- Equipment — machines, tools, or technology
+- Process — the way the job is done or documented
+- Materials — parts, supplies, or resources
+- Environment — the workplace, layout, or conditions
+- Management — how things are organised or communicated
+[END_CHECKBOX]
+Once selected acknowledge briefly and move to phase five. Do not ask for examples.
+
+Phase five — Waste types.
+Say exactly this: "Does any of this sound familiar? Pick everything that applies. [CHECKBOX_WASTE]" Then list:
+- Waiting — time spent idle or delayed
+- Movement — people or things moving more or less than needed
+- Defects — errors, mistakes, or things not done right first time
+- Overproduction — doing more than is needed or too early
+- Inventory — too much or too little of something
+- Process — steps or parts of the process that don't add value
+[END_CHECKBOX]
+Once selected acknowledge briefly and move to phase six.
+
+Phase six — Has anything been tried.
+Ask simply if anything has been tried to fix this. If yes ask briefly what happened. If no move to close.
+
+Ending The Conversation:
+Summarise the problem back in two plain English sentences using "you" and "your" not the user's name. Ask if that sounds right.
+Once confirmed say exactly this: "Your SnapShot has been submitted and your manager has been notified. You'll be kept in the loop every step of the way. Nice work for flagging it."
+
+Your Output:
+Once closing message is sent generate this JSON silently as background output only. NEVER display it in the chat. NEVER show it to the user under any circumstances:
+{
+  "problem_title": "max 43 chars",
+  "created_by": "Name, Role",
+  "current_state": "max 280 chars. Purely factual and observable. What is literally happening right now. Where, how often, what cannot be completed. No context or history.",
+  "ishikawa_factors": "max 280 chars total. Output ONLY as a plain list with each factor on its own line. No JSON escaping. Each line must start with • then a space then Category — specific example from conversation. Each factor must be on a completely separate line. Example output:\n• Equipment — scanner loses signal at hitch rack\n• Environment — wifi coverage poor in stores area. NEVER use generic descriptions. Always specific to this problem.",
+  "waste_factors": "max 265 chars total. Output ONLY as a plain list with each factor on its own line. No JSON escaping. Each line must start with • then a space then Category — specific example from conversation. Each factor must be on a completely separate line. Example output:\n• Waiting — operative idle for 10 minutes per pick\n• Movement — operative walks stores area to find signal. Always specific to this problem.",
+  "why_this_matters": "max 315 chars. The immediate business impact. What this problem is costing right now. Professional third party language. Never refer to the user by name.",
+  "anttro_insight": "max 315 chars. Calculate the projected annual impact using frequency and duration described. Show the maths simply. Frame as an estimate and opportunity. Always frame as estimate based on information provided."
+}
+
+Output language rules:
+Never refer to the user by name in any output field except created_by.
+Use professional third party language. Refer to the person by their role.
+All output reads as a professional lean analysis not a personal account.
+Ishikawa and waste factor descriptions must always be specific to this problem. Never generic.
+CRITICAL OUTPUT RULE: Generate the JSON output silently in the background only. NEVER display it in the chat window. NEVER show it to the user. The JSON is for system use only.
+
+What You Never Do:
+Never claim to know the root cause. Never blame individuals. Never add information not given. Never use location words the user hasn't used. Never ask for examples of factors or waste types. Never make the user feel inadequate. Never ask more than one question at a time. Never probe the same point more than once. Never use lean or methodology terminology. Never use long dashes, formal phrasing, or corporate language. Never say Fair enough, That's helpful, Great, or hollow filler phrases. Never display the JSON output in the chat window.`;
+
+let conversationHistory = [];
+let apiKey = '';
+let isLoading = false;
+let conversationComplete = false;
+let resetTimer = null;
+
+// Auto-start conversation when page loads
+window.addEventListener('load', () => {
+  setTimeout(() => startConversation(), 500);
+});
+
+async function startConversation() {
+  window.slidesShown = false;
+  window.slidesPreviewShown = false;
+  window.feedbackSubmitted = false;
+  window.feedbackDone = false;
+  window.makeResponseReady = false;
+  window.currentPresentationId = null;
+  const openingMessage = "Alright, let's get this logged. What's your name?";
+  conversationHistory.push({ role: 'assistant', content: openingMessage });
+  addMessage('bot', openingMessage);
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function getTime() {
+  return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  if (msg) { el.textContent = msg; el.style.display = 'block'; }
+  else { el.style.display = 'none'; }
+}
+
+function addMessage(role, content) {
+  const messages = document.getElementById('messages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = `message ${role}`;
+  const avatar = document.createElement('div');
+  avatar.className = `avatar ${role}`;
+  avatar.textContent = role === 'bot' ? 'G' : 'U';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  msg.appendChild(avatar);
+  msg.appendChild(bubble);
+  const time = document.createElement('div');
+  time.className = `timestamp ${role === 'user' ? 'right' : ''}`;
+  time.textContent = getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showTyping() {
+  const messages = document.getElementById('messages');
+  const typing = document.createElement('div');
+  typing.className = 'typing';
+  typing.id = 'typingIndicator';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const dots = document.createElement('div');
+  dots.className = 'typing-dots';
+  dots.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  typing.appendChild(avatar);
+  typing.appendChild(dots);
+  messages.appendChild(typing);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeTyping() {
+  const typing = document.getElementById('typingIndicator');
+  if (typing) typing.remove();
+}
+
+function parseCheckboxMessage(content) {
+  const ishikawa = content.includes('[CHECKBOX_ISHIKAWA]');
+  const waste = content.includes('[CHECKBOX_WASTE]');
+  const feedback = content.includes('[CHECKBOX_FEEDBACK]');
+  if (!ishikawa && !waste && !feedback) return null;
+  const introMatch = content.match(/^([\s\S]*?)\[CHECKBOX_/);
+  const intro = introMatch ? introMatch[1].trim() : '';
+  const items = [];
+  const lines = content.split('\n');
+  for (const line of lines) {
+    const match = line.match(/^-\s+(.+?)\s+—\s+(.+)$/);
+    if (match) items.push({ label: match[1].trim(), desc: match[2].trim() });
+    const simpleMatch = line.match(/^-\s+(.+)$/);
+    if (simpleMatch && !match) items.push({ label: simpleMatch[1].trim(), desc: '' });
+  }
+  let type = 'ishikawa';
+  if (waste) type = 'waste';
+  if (feedback) type = 'feedback';
+  return { intro, items, type };
+}
+
+function renderCheckboxMessage(parsed) {
+  const messages = document.getElementById('messages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'checkbox-container';
+  const intro = document.createElement('div');
+  intro.className = 'checkbox-intro';
+  intro.textContent = parsed.intro;
+  container.appendChild(intro);
+  const selected = new Set();
+  parsed.items.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'checkbox-item';
+    row.onclick = () => {
+      if (selected.has(i)) { selected.delete(i); row.classList.remove('selected'); }
+      else { selected.add(i); row.classList.add('selected'); }
+      confirmBtn.disabled = selected.size === 0;
+    };
+    const box = document.createElement('div');
+    box.className = 'checkbox-box';
+    const label = document.createElement('div');
+    label.className = 'checkbox-label';
+    label.innerHTML = item.desc ? `<strong>${item.label}</strong> — ${item.desc}` : `<strong>${item.label}</strong>`;
+    row.appendChild(box);
+    row.appendChild(label);
+    container.appendChild(row);
+  });
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'checkbox-confirm';
+  confirmBtn.textContent = parsed.type === 'feedback' ? 'Submit feedback' : 'Confirm selections';
+  confirmBtn.disabled = true;
+  confirmBtn.onclick = () => {
+    const selections = Array.from(selected).map(i => parsed.items[i].label).join(', ');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = '✓ Done';
+    container.querySelectorAll('.checkbox-item').forEach(r => r.style.pointerEvents = 'none');
+    sendUserMessage(selections);
+  };
+  container.appendChild(confirmBtn);
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showFeedbackAndLoading() {
+  const messages = document.getElementById('messages');
+  window.feedbackDone = false;
+
+  // Show feedback message
+  const feedbackGroup = document.createElement('div');
+  feedbackGroup.className = 'message-group';
+  const feedbackMsg = document.createElement('div');
+  feedbackMsg.className = 'message bot';
+  const feedbackAvatar = document.createElement('div');
+  feedbackAvatar.className = 'avatar bot';
+  feedbackAvatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'checkbox-container';
+  
+  const intro = document.createElement('div');
+  intro.className = 'checkbox-intro';
+  intro.textContent = "While your slides are loading, how did you find using SnapShot?";
+  container.appendChild(intro);
+
+  const feedbackItems = ["Easy to use", "Could be simpler", "Needed more help"];
+  const selected = new Set();
+  
+  feedbackItems.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'checkbox-item';
+    row.onclick = () => {
+      selected.forEach(s => container.querySelectorAll('.checkbox-item')[s].classList.remove('selected'));
+      selected.clear();
+      selected.add(i);
+      row.classList.add('selected');
+      confirmBtn.disabled = false;
+    };
+    const box = document.createElement('div');
+    box.className = 'checkbox-box';
+    const label = document.createElement('div');
+    label.className = 'checkbox-label';
+    label.innerHTML = `<strong>${item}</strong>`;
+    row.appendChild(box);
+    row.appendChild(label);
+    container.appendChild(row);
+  });
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'checkbox-confirm';
+  confirmBtn.textContent = 'Submit feedback';
+  confirmBtn.disabled = true;
+  confirmBtn.onclick = () => {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = '✓ Thanks!';
+    container.querySelectorAll('.checkbox-item').forEach(r => r.style.pointerEvents = 'none');
+    window.feedbackDone = true;
+    // If presentation ID already arrived show slides now
+    if (window.currentPresentationId) {
+      const lg = document.getElementById('loadingGroup');
+      if (lg) lg.remove();
+      showSlidePreview();
+    }
+  };
+  container.appendChild(confirmBtn);
+  feedbackMsg.appendChild(feedbackAvatar);
+  feedbackMsg.appendChild(container);
+  feedbackGroup.appendChild(feedbackMsg);
+  messages.appendChild(feedbackGroup);
+
+  // Show loading animation below feedback
+  const loadingGroup = document.createElement('div');
+  loadingGroup.className = 'message-group';
+  loadingGroup.id = 'loadingGroup';
+  const loadingMsg = document.createElement('div');
+  loadingMsg.className = 'message bot';
+  const loadingAvatar = document.createElement('div');
+  loadingAvatar.className = 'avatar bot';
+  loadingAvatar.textContent = 'G';
+  const loadingContainer = document.createElement('div');
+  loadingContainer.className = 'loading-container';
+  loadingContainer.innerHTML = '<div class="loading-text">Your SnapShot slides are generating...</div><div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+  loadingMsg.appendChild(loadingAvatar);
+  loadingMsg.appendChild(loadingContainer);
+  loadingGroup.appendChild(loadingMsg);
+  messages.appendChild(loadingGroup);
+  messages.scrollTop = messages.scrollHeight;
+
+  // Check every 500ms - show slides only when BOTH feedback done AND presentation ID ready
+  window.slideCheckInterval = setInterval(() => {
+    if (window.feedbackDone && window.currentPresentationId) {
+      clearInterval(window.slideCheckInterval);
+      const lg = document.getElementById('loadingGroup');
+      if (lg) lg.remove();
+      showSlidePreview();
+    }
+  }, 500);
+
+  // Fallback after 15 seconds show slides regardless
+  setTimeout(() => {
+    clearInterval(window.slideCheckInterval);
+    const lg = document.getElementById('loadingGroup');
+    if (lg) lg.remove();
+    if (!document.getElementById('slidesContainer')) {
+      showSlidePreview();
+    }
+  }, 15000);
+}
+
+function requestChanges() {
+  conversationComplete = false;
+  document.getElementById('userInput').disabled = false;
+  document.getElementById('sendBtn').disabled = false;
+  addMessage('bot', "No problem. What would you like to change? Just tell me and I'll update your SnapShot.");
+  document.getElementById('userInput').focus();
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showSlidePreview() {
+  if (window.slidesPreviewShown) return;
+  window.slidesPreviewShown = true;
+  const presentationId = window.currentPresentationId;
+  const messages = document.getElementById('messages');
+  
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  
+  const slidesContainer = document.createElement('div');
+  slidesContainer.className = 'slides-container';
+  
+  const header = document.createElement('div');
+  header.className = 'slides-header';
+  header.textContent = "Here's your SnapShot. Have a quick look through and make sure you're happy.";
+  slidesContainer.appendChild(header);
+
+  if (presentationId) {
+    const iframeWrapper = document.createElement('div');
+    iframeWrapper.className = 'slides-iframe-wrapper';
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://docs.google.com/presentation/d/${presentationId}/embed?start=false&loop=false&delayms=3000`;
+    iframe.allowFullscreen = true;
+    iframeWrapper.appendChild(iframe);
+    slidesContainer.appendChild(iframeWrapper);
+
+    const downloadBtn = document.createElement('a');
+    downloadBtn.className = 'slides-btn slides-btn-download';
+    downloadBtn.href = `https://docs.google.com/presentation/d/${presentationId}/export/pdf`;
+    downloadBtn.target = '_blank';
+    downloadBtn.textContent = '⬇ Download My Slides';
+    slidesContainer.appendChild(downloadBtn);
+  } else {
+    const noPreview = document.createElement('div');
+    noPreview.style.cssText = 'padding: 20px; text-align: center; color: var(--text-dim); font-size: 14px;';
+    noPreview.textContent = 'Your slides are on their way. Check your email for the link.';
+    slidesContainer.appendChild(noPreview);
+  }
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'slides-btn slides-btn-submit';
+  submitBtn.id = 'submitBtn';
+  submitBtn.style.marginBottom = '10px';
+  submitBtn.textContent = '✓ Submit to My Manager';
+  submitBtn.onclick = () => {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '✓ Submitted!';
+    addMessage('bot', "Thanks for helping close the loop. Your manager has been notified and this has been logged. You know where I am if you have any other problems. 👊");
+    startResetTimer();
+  };
+  slidesContainer.appendChild(submitBtn);
+
+  if (presentationId) {
+    const downloadBtn = document.createElement('a');
+    downloadBtn.className = 'slides-btn slides-btn-download';
+    downloadBtn.href = `https://docs.google.com/presentation/d/${presentationId}/export/pdf`;
+    downloadBtn.target = '_blank';
+    downloadBtn.textContent = '⬇ Download My Slides';
+    downloadBtn.style.display = 'block';
+    downloadBtn.style.textDecoration = 'none';
+    downloadBtn.style.textAlign = 'center';
+    slidesContainer.appendChild(downloadBtn);
+  }
+
+
+
+  msg.appendChild(avatar);
+  msg.appendChild(slidesContainer);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+
+  // Disable input after slides shown
+  document.getElementById('userInput').disabled = true;
+  document.getElementById('sendBtn').disabled = true;
+}
+
+function startResetTimer() {
+  resetTimer = setTimeout(() => {
+    conversationHistory = [];
+    conversationComplete = false;
+    window.currentPresentationId = null;
+    document.getElementById('userInput').disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+    const messages = document.getElementById('messages');
+    messages.innerHTML = '';
+    startConversation();
+  }, 300000);
+}
+
+async function extractAndSendJSON(replyText) {
+  try {
+    const jsonResponse = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: 'You are a data extraction assistant. Based on the conversation provided, generate ONLY a valid JSON object with these exact fields: problem_title, created_by, current_state, ishikawa_factors, waste_factors, why_this_matters, anttro_insight. Return only the JSON object, nothing else. No markdown, no backticks.',
+        messages: [
+          ...conversationHistory,
+          { role: 'user', content: 'Generate the JSON output for this conversation now.' }
+        ]
+      })
+    });
+    const jsonData = await jsonResponse.json();
+    const jsonText = jsonData.content[0].text;
+    const parsed = JSON.parse(jsonText);
+    
+    // Send to Make and wait for Presentation ID response
+    try {
+      const makeResponse = await fetch(MAKE_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsed)
+      });
+      if (makeResponse.ok) {
+        try {
+          const makeData = await makeResponse.json();
+          if (makeData && makeData.presentation_id) {
+            window.currentPresentationId = makeData.presentation_id;
+          }
+        } catch(e) {}
+      }
+    } catch(e) {}
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+
+function sendUserMessage(text) {
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+  sendToAPI();
+}
+
+async function sendToAPI() {
+  showError('');
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: conversationHistory
+      })
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API request failed');
+    }
+    const data = await response.json();
+    const reply = data.content[0].text;
+    conversationHistory.push({ role: 'assistant', content: reply });
+    removeTyping();
+
+    // Strip any JSON from reply
+    const jsonPatterns = [/```json[\s\S]*?```/g, /```[\s\S]*?```/g, /\{[\s\S]*"why_this_matters"[\s\S]*\}/g, /\{[\s\S]*"anttro_insight"[\s\S]*\}/g];
+    let cleanReply = reply;
+    jsonPatterns.forEach(p => { cleanReply = cleanReply.replace(p, ''); });
+    cleanReply = cleanReply.trim();
+
+    const parsed = parseCheckboxMessage(cleanReply);
+    if (parsed) {
+      renderCheckboxMessage(parsed);
+    } else if (cleanReply) {
+      addMessage('bot', cleanReply);
+    }
+
+    if (reply.includes('Nice work for flagging it') && !window.slidesShown) {
+      conversationComplete = true;
+      window.slidesShown = true;
+      document.getElementById('userInput').disabled = true;
+      document.getElementById('sendBtn').disabled = true;
+      
+      // Start extracting JSON and sending to Make in background
+      extractAndSendJSON(reply);
+      
+      // Show feedback question and loading animation
+      showFeedbackAndLoading();
+    }
+  } catch (err) {
+    removeTyping();
+    showError(`Something went wrong: ${err.message}`);
+    conversationHistory.pop();
+  }
+  isLoading = false;
+  if (!conversationComplete) {
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text || isLoading || conversationComplete) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+  await sendToAPI();
+}
+</script>
+</body>
+</html>
