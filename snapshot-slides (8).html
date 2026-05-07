@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SnapShot — Anttro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; color-scheme:light; }
+:root { color-scheme: light; }
+body { font-family:'Barlow',sans-serif; background:#dde4ec; margin:0; padding:0; }
+.ctrl-bar { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(15,15,15,0.94); backdrop-filter:blur(14px); padding:10px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.08); }
+.ctrl-title { font-size:13px; font-weight:600; color:rgba(255,255,255,0.6); letter-spacing:0.4px; }
+.ctrl-btns { display:flex; gap:10px; }
+.ctrl-btn { padding:8px 20px; border-radius:8px; font-size:13px; font-weight:700; font-family:'Barlow',sans-serif; cursor:pointer; border:none; transition:all 0.18s; }
+@media (max-width: 768px) { .ctrl-btn-pri { display:none !important; } }
+.ctrl-pri { background:#7ec8b0; color:#111; }
+.ctrl-pri:hover { background:#5aaa92; }
+.ctrl-sec { background:rgba(255,255,255,0.09); color:rgba(255,255,255,0.75); border:1px solid rgba(255,255,255,0.12); }
+.ctrl-sec:hover { background:rgba(255,255,255,0.14); }
+.slides-page { padding:60px 0 32px; display:flex; flex-direction:column; gap:0; align-items:center; }
+/* Responsive slide wrapper */
+.slide-outer { width:100%; padding-bottom:56.25%; position:relative; margin-bottom:16px; }
+.slide-inner { position:absolute; top:0; left:0; width:1280px; height:720px; transform-origin:top left; }
+.sld { width:1280px; height:720px; position:relative; overflow:hidden; border-radius:6px; font-family:'Barlow',sans-serif; box-shadow:0 8px 40px rgba(0,0,0,0.25); flex-shrink:0; }
+.sld-bg { position:absolute; inset:0; background:#dde4ec; }
+.sld-bg::after { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E"); background-size:256px 256px; opacity:0.4; mix-blend-mode:multiply; pointer-events:none; }
+.sld-blob { position:absolute; border-radius:50%; pointer-events:none; }
+.blob-tl { width:380px; height:340px; top:-70px; left:-70px; background:radial-gradient(ellipse at 38% 38%, rgba(90,120,168,0.88) 0%, rgba(80,112,160,0.55) 42%, transparent 70%); filter:blur(55px); }
+.blob-cr { width:640px; height:580px; top:20px; right:-80px; background:radial-gradient(ellipse at 52% 42%, rgba(90,148,210,0.82) 0%, rgba(100,160,218,0.65) 30%, rgba(120,185,215,0.45) 55%, transparent 75%); filter:blur(75px); }
+.blob-cr2 { width:340px; height:300px; bottom:0px; right:120px; background:radial-gradient(ellipse at 50% 60%, rgba(120,200,210,0.55) 0%, rgba(140,210,200,0.30) 40%, transparent 68%); filter:blur(60px); }
+.blob-rainbow { width:220px; height:180px; bottom:-20px; right:0px; background:radial-gradient(ellipse at 40% 60%, rgba(160,210,180,0.45) 0%, rgba(180,200,140,0.30) 35%, rgba(200,180,120,0.20) 60%, transparent 75%); filter:blur(45px); }
+/* SLIDE 1 */
+.s1-pt { position:absolute; top:18px; left:52px; font-size:42px; font-weight:400; color:#3a3e44; }
+.s1-anttro { position:absolute; top:14px; right:52px; font-size:42px; font-weight:900; color:#3a3e44; letter-spacing:-0.5px; }
+.s1-topline { position:absolute; top:88px; left:52px; right:52px; height:1px; background:rgba(58,62,68,0.3); }
+.s1-title { position:absolute; bottom:140px; left:48px; right:48px; font-size:210px; font-weight:900; color:#3a3e44; line-height:1; letter-spacing:-8px; white-space:nowrap; }
+.s1-botline { position:absolute; bottom:82px; left:52px; right:52px; height:1px; background:rgba(58,62,68,0.3); }
+.s1-created { position:absolute; bottom:18px; left:52px; font-size:28px; font-weight:700; color:#3a3e44; }
+.s1-created span { font-weight:400; margin-left:14px; }
+/* SLIDE 2 */
+.s2-wrap { position:absolute; inset:0; padding:28px 40px 48px; display:flex; flex-direction:column; gap:10px; }
+.s2-title { font-size:92px; font-weight:900; color:#3a3e44; line-height:1; letter-spacing:-3px; }
+.s2-sub { font-size:30px; font-weight:400; color:#3a3e44; margin-top:-4px; }
+.s2-pills { display:flex; gap:0; }
+.s2-pill { border-radius:60px; padding:12px 32px; font-size:20px; font-weight:700; color:#3a3e44; text-align:center; }
+.s2-pill-l { background:rgba(155,190,230,0.72); border:2px solid rgba(255,255,255,0.7); flex:1; text-align:center; margin-right:8px; border-radius:60px; }
+.s2-pill-r { background:rgba(165,198,232,0.55); border:2px solid rgba(255,255,255,0.6); flex:2; text-align:center; }
+.s2-panel { flex:1; background:rgba(78,88,100,0.52); border-radius:18px; backdrop-filter:blur(14px); display:flex; overflow:hidden; position:relative; }
+.s2-col { flex:1; padding:22px 26px; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+.s2-col+.s2-col::before { content:''; position:absolute; left:0; top:14px; bottom:14px; width:1px; background:rgba(200,212,224,0.28); }
+.s2-col+.s2-col::after { content:''; position:absolute; left:-5px; top:14px; width:10px; height:10px; background:rgba(200,212,224,0.45); border-radius:50%; }
+.s2-dot-b { position:absolute; left:-5px; bottom:14px; width:10px; height:10px; background:rgba(200,212,224,0.45); border-radius:50%; }
+.s2-col-h { font-size:22px; font-weight:700; color:#fff; text-decoration:underline; text-underline-offset:4px; margin-bottom:14px; text-align:center; }
+.s2-col-t { font-size:20px; color:rgba(255,255,255,0.92); line-height:1.65; text-align:center; }
+.s2-powered { position:absolute; bottom:14px; right:22px; display:flex; align-items:center; gap:5px; font-size:11px; font-weight:400; color:#3a3e44; letter-spacing:2.5px; text-transform:uppercase; }
+.s2-powered b { font-weight:900; font-size:15px; letter-spacing:-0.5px; text-transform:none; }
+/* SLIDE 3 */
+.s3-wrap { position:absolute; inset:0; padding:28px 52px 52px; display:flex; flex-direction:column; }
+.s3-title { font-size:100px; font-weight:900; color:#3a3e44; line-height:1; letter-spacing:-3px; }
+.s3-rule { width:100%; height:1px; background:rgba(58,62,68,0.3); margin:10px 0 16px; }
+.s3-cards { flex:1; display:flex; flex-direction:column; gap:14px; position:relative; padding-left:52px; }
+.s3-arrow { position:absolute; left:4px; top:50%; transform:translateY(-55%); width:46px; }
+.s3-card { border-radius:18px; padding:24px 32px; flex:1; overflow:hidden; }
+.s3-card-blue { background:linear-gradient(140deg,rgba(160,198,235,0.78) 0%,rgba(178,212,240,0.62) 45%,rgba(165,205,235,0.70) 100%); border:2px solid rgba(255,255,255,0.65); backdrop-filter:blur(10px); }
+.s3-card-grey { background:linear-gradient(140deg,rgba(180,190,208,0.62) 0%,rgba(190,200,216,0.52) 45%,rgba(175,188,210,0.58) 100%); border:2px solid rgba(255,255,255,0.45); backdrop-filter:blur(10px); }
+.s3-card-h { font-size:26px; font-weight:700; color:#3a3e44; text-decoration:underline; text-underline-offset:4px; margin-bottom:14px; }
+.s3-card-t { font-size:22px; color:#3a3e44; line-height:1.7; }
+.s3-powered { position:absolute; bottom:14px; right:22px; display:flex; align-items:center; gap:5px; font-size:11px; font-weight:400; color:#3a3e44; letter-spacing:2.5px; text-transform:uppercase; }
+.s3-powered b { font-weight:900; font-size:15px; letter-spacing:-0.5px; text-transform:none; }
+@media print {
+  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; box-sizing:border-box !important; }
+  @page { size:1280px 720px; margin:0; padding:0; }
+  html { margin:0 !important; padding:0 !important; }
+  body { margin:0 !important; padding:0 !important; background:transparent; width:1280px; height:720px; overflow:hidden; }
+  .ctrl-bar { display:none !important; }
+  .slides-page { padding:0 !important; gap:0 !important; align-items:flex-start !important; margin:0 !important; display:block !important; }
+  .slide-outer { width:1280px !important; padding-bottom:0 !important; height:720px !important; margin:0 !important; page-break-after:always !important; break-after:page !important; }
+  .slide-inner { position:relative !important; transform:none !important; width:1280px !important; height:720px !important; }
+  .sld { border-radius:0 !important; box-shadow:none !important; width:1280px !important; height:720px !important; max-height:720px !important; page-break-inside:avoid !important; break-inside:avoid !important; overflow:hidden !important; display:block !important; position:relative !important; }
+  .slide-outer:last-child { page-break-after:avoid !important; break-after:avoid !important; }
+}
+</style>
+</head>
+<body>
+<div class="ctrl-bar">
+  <span class="ctrl-title">SnapShot Preview</span>
+  <div class="ctrl-btns">
+    <button class="ctrl-btn ctrl-sec" onclick="window.close()">← Back</button>
+    <button class="ctrl-btn ctrl-pri" onclick="printSlides()">⬇ Download PDF</button>
+  </div>
+</div>
+<div class="slides-page" id="slidesPage">
+  <div class="slide-outer"><div class="slide-inner">
+  <div class="sld">
+    <div class="sld-bg"><div class="sld-blob blob-tl"></div><div class="sld-blob blob-cr"></div><div class="sld-blob blob-cr2"></div><div class="sld-blob blob-rainbow"></div></div>
+    <div class="s1-pt" id="s1pt"></div>
+    <div class="s1-anttro">Anttro.</div>
+    <div class="s1-topline"></div>
+    <div class="s1-title">SnapShot.</div>
+    <div class="s1-botline"></div>
+    <div class="s1-created">Created by : <span id="s1cb"></span></div>
+  </div>
+  </div></div>
+  <div class="slide-outer"><div class="slide-inner">
+  <div class="sld">
+    <div class="sld-bg"><div class="sld-blob blob-tl"></div><div class="sld-blob blob-cr"></div><div class="sld-blob blob-cr2"></div><div class="sld-blob blob-rainbow"></div></div>
+    <div class="s2-wrap">
+      <div class="s2-title">Problem Overview.</div>
+      <div class="s2-sub" id="s2sub"></div>
+      <div class="s2-pills">
+        <div class="s2-pill s2-pill-l">Whats the Problem?</div>
+        <div class="s2-pill s2-pill-r">Whats Contributing to it?</div>
+      </div>
+      <div class="s2-panel">
+        <div class="s2-col"><div class="s2-col-h">Current State</div><div class="s2-col-t" id="s2cs"></div></div>
+        <div class="s2-col"><div class="s2-dot-b"></div><div class="s2-col-h">Ishikawa Factors</div><div class="s2-col-t" id="s2ish"></div></div>
+        <div class="s2-col"><div class="s2-dot-b"></div><div class="s2-col-h">Waste Factors</div><div class="s2-col-t" id="s2wst"></div></div>
+      </div>
+    </div>
+    <div class="s2-powered">POWERED BY <b>Anttro.</b></div>
+  </div>
+  </div></div>
+  <div class="slide-outer"><div class="slide-inner">
+  <div class="sld">
+    <div class="sld-bg"><div class="sld-blob blob-tl"></div><div class="sld-blob blob-cr"></div><div class="sld-blob blob-cr2"></div><div class="sld-blob blob-rainbow"></div></div>
+    <div class="s3-wrap">
+      <div class="s3-title">Case For Action.</div>
+      <div class="s3-rule"></div>
+      <div class="s3-cards">
+        <svg class="s3-arrow" viewBox="0 0 50 150" fill="none" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+          <path d="M40 5 C40 5 8 5 8 75 C8 130 36 145 36 145" stroke="#3a3e44" stroke-width="3" stroke-linecap="round" fill="none"/>
+        </svg>
+        <div class="s3-card s3-card-blue"><div class="s3-card-h">Why This Matters</div><div class="s3-card-t" id="s3wtm"></div></div>
+        <div class="s3-card s3-card-grey"><div class="s3-card-h">Anttro&#8217;s Insight</div><div class="s3-card-t" id="s3ins"></div></div>
+      </div>
+    </div>
+    <div class="s3-powered">POWERED BY <b>Anttro.</b></div>
+  </div>
+</div>
+<script>
+function trunc(s,m){if(!s)return'';s=String(s);return s.length>m?s.slice(0,m-1)+'\u2026':s;}
+function fhtml(t){
+  if(!t) return '';
+  // Fix encoding issues - replace mangled em dashes
+  t = t.replace(/â€"/g, '\u2014').replace(/â\x80\x93/g, '\u2013').replace(/\u00e2\u0080\u0094/g, '\u2014');
+  // Split on newlines first
+  let lines = t.split(/\n/).map(l=>l.trim()).filter(l=>l.length>0);
+  // If only one line, split on category keywords
+  if(lines.length <= 1) {
+    lines = t.split(/(?=\b(?:People|Equipment|Process|Materials|Environment|Management|Waiting|Movement|Defects|Overproduction|Inventory)\b\s*[\u2014\-])/)
+              .map(l=>l.trim()).filter(l=>l.length>0);
+  }
+  // Strip leading bullet or dash
+  return lines.map(l=>l.replace(/^[•·\-\u2022]\s*/,'')).filter(l=>l.length>0)
+    .map(l=>'<span style="display:block;margin-bottom:8px">\u2022 '+l+'</span>').join('');
+}
+function go(d){
+  document.getElementById('s1pt').textContent=trunc(d.problem_title,55);
+  document.getElementById('s1cb').textContent=trunc(d.created_by,40);
+  document.getElementById('s2sub').textContent=trunc(d.problem_title,55);
+  document.getElementById('s2cs').textContent=trunc(d.current_state,480);
+  document.getElementById('s2ish').innerHTML=fhtml(trunc(d.ishikawa_factors,360));
+  document.getElementById('s2wst').innerHTML=fhtml(trunc(d.waste_factors,360));
+  document.getElementById('s3wtm').textContent=trunc(d.why_this_matters,360);
+  document.getElementById('s3ins').textContent=trunc(d.anttro_insight,360);
+}
+let data=null;
+try{const s=sessionStorage.getItem('anttro_snapshot');if(s)data=JSON.parse(s);}catch(e){}
+if(!data){try{const e=new URLSearchParams(window.location.search).get('data');if(e)data=JSON.parse(atob(e));}catch(e){}}
+if(!data)data={problem_title:'Problem Title',created_by:'Name, Role',current_state:'Current state description.',ishikawa_factors:'• People — example\n• Process — example',waste_factors:'• Waiting — example\n• Defects — example',why_this_matters:'Business impact statement.',anttro_insight:'Projected annual impact estimate.'};
+go(data);
+scaleSlides();
+window.addEventListener('resize', scaleSlides);
+
+function scaleSlides() {
+  const outers = document.querySelectorAll('.slide-outer');
+  outers.forEach(outer => {
+    const inner = outer.querySelector('.slide-inner');
+    if (!inner) return;
+    const scale = outer.offsetWidth / 1280;
+    inner.style.transform = 'scale(' + scale + ')';
+  });
+}
+
+
+function printSlides() {
+  const style = document.createElement('style');
+  style.textContent = '@page { size: 1280px 720px; margin: 0; } body { margin: 0; padding: 0; }';
+  document.head.appendChild(style);
+  setTimeout(() => { window.print(); }, 100);
+}
+</script>
+</body>
+</html>
