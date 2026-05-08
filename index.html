@@ -617,6 +617,7 @@ async function extractAndSendJSON(replyText) {
       .replace(/â/g, '—')
       .replace(/â€"/g, '—')
       .replace(/â/g, '—');
+    const teamId = new URLSearchParams(window.location.search).get('team') || 'ANT-000';
     const parsed = JSON.parse(cleanedJson);
     window.currentSnapshotData = parsed;
     // Generate snapshot URL with base64 encoded data for Sheets link
@@ -655,8 +656,7 @@ async function sendToAPI() {
   isLoading = true;
   document.getElementById('sendBtn').disabled = true;
   showTyping();
-  try {
-  const teamId = new URLSearchParams(window.location.search).get('team') || 'ANT-000';  
+  try { 
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
