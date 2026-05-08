@@ -141,7 +141,7 @@ body { font-family:'Barlow',sans-serif; background:#dde4ec; margin:0; padding:0;
   </div>
 </div>
 <script>
-function trunc(s,m){if(!s)return'';s=String(s);return s.length>m?s.slice(0,m-1)+'\u2026':s;}
+function trunc(s,m){if(!s)return'';s=String(s);if(s.length<=m)return s;const cut=s.slice(0,m);const lastPeriod=cut.lastIndexOf('.');const lastSpace=cut.lastIndexOf(' ');if(lastPeriod>m*0.6)return cut.slice(0,lastPeriod+1);if(lastSpace>m*0.6)return cut.slice(0,lastSpace);return cut;}
 function fhtml(t){
   if(!t) return '';
   // Fix encoding issues - replace mangled em dashes
