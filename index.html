@@ -628,7 +628,7 @@ async function extractAndSendJSON(replyText) {
       const makeResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'send_to_make', data: parsed })
+        body: JSON.stringify({ action: 'send_to_make', data: { ...parsed, team_id: teamId } })
       });
       if (makeResponse.ok) {
         try {
@@ -656,6 +656,7 @@ async function sendToAPI() {
   document.getElementById('sendBtn').disabled = true;
   showTyping();
   try {
+  const teamId = new URLSearchParams(window.location.search).get('team') || 'ANT-000';  
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
