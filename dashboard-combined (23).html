@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anttro Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+  height:100%; font-family:'Barlow',sans-serif;
+  background:#cdd5e0;
+}
+body::after {
+  content:''; position:fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size:200px; pointer-events:none; z-index:0; opacity:0.5; mix-blend-mode:multiply;
+}
+
+/* ── LOADING BAR ── */
+.loading-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, #4a9b7f, #7dd4b8, #4a9b7f);
+  background-size: 200% 100%;
+  z-index: 9999;
+  border-radius: 0 2px 2px 0;
+  animation: loadingShimmer 1.2s linear infinite;
+  transition: width 0.3s ease, opacity 0.4s ease;
+  opacity: 1;
+}
+@keyframes loadingShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── LAYOUT ── */
+html, body { display:flex; flex-direction:column; overflow:hidden; }
+
+.row { display:flex; align-items:center; justify-content:center; gap:0; position:relative; z-index:1; padding:0 50px 20px 20px; }
+
+/* ── CONNECTOR ── */
+.connector {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 140px;
+  margin-top: 72px;
+}
+.connector-line {
+  flex: 1;
+  height: 4px;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.85) 2px, transparent 2px);
+  background-size: 12px 4px;
+  background-repeat: repeat-x;
+}
+.flow-bubble {
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  background: #e84444;
+  border: 4px solid #cdd5e0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(232,68,68,0.55);
+  animation: bpulse 2.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.fb-label {
+  font-size: 9px; font-weight: 800;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: 0.2px; line-height: 1.3;
+  text-align: center;
+}
+.fb-num {
+  font-size: 26px; font-weight: 900;
+  color: #fff; line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+/* ── NEW SUBMISSIONS BUBBLE ── */
+.new-bubble {
+  position: absolute;
+  top: 65px; left: 18px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #4a9b7f;
+  border: 3px solid #cdd5e0;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(74,155,127,0.55);
+  z-index: 10;
+  cursor: pointer;
+  animation: greenpulse 2.2s ease-in-out infinite;
+  transition: transform 0.15s;
+}
+.new-bubble:hover { transform: scale(1.1); }
+.new-bubble span {
+  font-size: 13px; font-weight: 900;
+  color: #fff; line-height: 1;
+}
+@keyframes greenpulse {
+  0%,100% { box-shadow: 0 4px 14px rgba(74,155,127,0.55), 0 0 0 0 rgba(74,155,127,0.35); }
+  50% { box-shadow: 0 4px 14px rgba(74,155,127,0.65), 0 0 0 8px rgba(74,155,127,0); }
+}
+
+.node { display:flex; flex-direction:column; align-items:flex-start; outline:none; }
+.node:focus { outline:none; }
+
+.node-title {
+  font-size:58px; font-weight:900; color:#fff;
+  letter-spacing:-1px; margin-bottom:-8px;
+  line-height:1;
+  text-shadow:0 2px 10px rgba(0,0,0,0.1);
+  width:270px;
+}
+.node-title-right { text-align:right; overflow:visible; }
+.node-title-snapshot { text-align:right; overflow:visible; }
+.node-title-center { text-align:center; overflow:visible; margin-left:-30px; }
+
+.shape-wrap { position:relative; width:270px; height:297px; filter:drop-shadow(0 16px 40px rgba(0,0,0,0.4)) drop-shadow(0 4px 12px rgba(0,0,0,0.25)); transition:filter 0.25s; }
+.shape-wrap:hover { filter:drop-shadow(0 24px 55px rgba(0,0,0,0.55)) drop-shadow(0 6px 18px rgba(0,0,0,0.35)); }
+.shape-svg { width:270px; height:297px; display:block; filter:none; }
+
+.shape-num {
+  position:absolute;
+  top:49%; left:51%;
+  transform:translate(-50%, -50%);
+  font-size:155px; font-weight:900;
+  color:rgba(255,255,255,0.95); line-height:1; letter-spacing:-5px;
+  text-shadow:0 3px 18px rgba(0,0,0,0.15);
+  pointer-events:none;
+  z-index:2;
+}
+
+@keyframes bpulse {
+  0%,100% { box-shadow:0 4px 18px rgba(232,68,68,0.55),0 0 0 0 rgba(232,68,68,0.35); }
+  50% { box-shadow:0 4px 18px rgba(232,68,68,0.65),0 0 0 10px rgba(232,68,68,0); }
+}
+
+.shapes-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+}
+
+/* ── STAT BAR ── */
+.stat-bar {
+  width: 100%;
+  flex-shrink: 0;
+  background: #2a3050;
+  padding: 14px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  position: relative;
+  z-index: 1;
+}
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 40px;
+  position: relative;
+}
+.stat-item + .stat-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 1px; height: 28px;
+  background: rgba(255,255,255,0.12);
+}
+.stat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.stat-label {
+  font-size: 10px; font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase; letter-spacing: 1px; line-height: 1;
+}
+.stat-value {
+  font-size: 22px; font-weight: 900;
+  color: #fff; letter-spacing: -0.5px; line-height: 1;
+}
+.stat-text { display: flex; flex-direction: column; gap: 3px; }
+
+/* ── CHART ── */
+.chart-container {
+  width: 100%;
+  flex-shrink: 0;
+  background: #2a3050;
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 16px 36px 20px;
+  position: relative;
+  z-index: 1;
+}
+.chart-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.chart-title { font-size:12px; font-weight:700; color:#ffffff; opacity:1; letter-spacing:0.3px; text-transform:uppercase; }
+.toggle { display:flex; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:3px; gap:2px; }
+.toggle-btn { padding:5px 16px; border-radius:16px; font-size:12px; font-weight:700; font-family:'Barlow',sans-serif; cursor:pointer; border:none; background:transparent; color:#ffffff; opacity:0.5; transition:all 0.2s; }
+.toggle-btn.active { background:rgba(255,255,255,0.2); opacity:1; color:#ffffff; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+.chart-wrap { position:relative; height:100px; }
+.chart-svg { width:100%; height:100%; overflow:visible; }
+.tooltip { position:absolute; background:rgba(45,51,64,0.85); backdrop-filter:blur(8px); color:#fff; font-size:11px; font-weight:700; padding:5px 10px; border-radius:6px; pointer-events:none; opacity:0; transition:opacity 0.15s; transform:translateX(-50%); white-space:nowrap; z-index:10; }
+.tooltip.visible { opacity:1; }
+
+/* ── POPUP OVERLAY ── */
+.popup-overlay {
+  position: fixed; inset: 0;
+  background: rgba(45,51,64,0.35);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.popup-overlay.visible { opacity: 1; pointer-events: all; }
+
+.popup {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(245,248,252,0.97);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.8);
+  border-radius: 20px 20px 0 0;
+  padding: 0 0 32px;
+  z-index: 101;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  max-height: 65vh;
+  display: flex; flex-direction: column;
+}
+.popup.visible { transform: translateY(0); }
+
+.popup-handle {
+  width: 40px; height: 4px;
+  background: rgba(45,51,64,0.15);
+  border-radius: 2px;
+  margin: 14px auto 0;
+  flex-shrink: 0;
+}
+.popup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 28px 14px;
+  border-bottom: 1px solid rgba(45,51,64,0.08);
+  flex-shrink: 0;
+}
+.popup-title { font-size: 36px; font-weight: 900; color: #2d3340; letter-spacing: -0.5px; }
+.popup-title em { font-style: normal; }
+.popup-count { font-size: 14px; font-weight: 700; color: #8a94a6; }
+.popup-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(45,51,64,0.08); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #5a6478; transition: background 0.15s;
+}
+.popup-close:hover { background: rgba(45,51,64,0.14); }
+
+.popup-list { overflow-y: auto; flex: 1; padding: 8px 28px; }
+.popup-list::-webkit-scrollbar { width: 4px; }
+.popup-list::-webkit-scrollbar-thumb { background: rgba(45,51,64,0.1); border-radius: 2px; }
+
+.popup-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(45,51,64,0.06);
+  animation: rowIn 0.3s ease both;
+}
+.popup-row:last-child { border-bottom: none; }
+@keyframes rowIn {
+  from { opacity:0; transform:translateY(8px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.row-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: #4a9b7f; }
+.dot-amber { background: #f0a500; }
+.dot-blue  { background: #5b8dee; }
+.dot-grey  { background: #b0b8c4; }
+
+.row-id { font-size: 13px; font-weight: 700; color: #8a94a6; flex-shrink: 0; width: 120px; }
+.row-info { flex: 1; }
+.row-title { font-size: 18px; font-weight: 700; color: #2d3340; line-height: 1.3; cursor: pointer; }
+.row-title:hover { color: #4a9b7f; }
+.row-meta { font-size: 14px; color: #8a94a6; margin-top: 2px; }
+
+.row-badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 10px; flex-shrink: 0; }
+.badge-ss { background: rgba(74,155,127,0.12); color: #4a9b7f; }
+.badge-ap { background: rgba(240,165,0,0.12); color: #d4920a; }
+.badge-rs { background: rgba(91,141,238,0.12); color: #3d6fd4; }
+.badge-cl { background: rgba(45,51,64,0.07); color: #8a94a6; }
+
+.row-btn {
+  font-size: 13px; font-weight: 700;
+  padding: 8px 16px; border-radius: 8px;
+  border: none; cursor: pointer;
+  font-family: 'Barlow', sans-serif;
+  background: #2d3340; color: #fff;
+  flex-shrink: 0; transition: all 0.15s;
+}
+.row-btn:hover { background: #4a9b7f; }
+
+/* ── POPUP GROUPS ── */
+.popup-group-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0 8px; cursor: pointer; user-select: none;
+  border-bottom: 1px solid rgba(45,51,64,0.08); margin-bottom: 4px;
+}
+.popup-group-header:first-child { padding-top: 6px; }
+.group-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 800;
+  color: #8a94a6; text-transform: uppercase; letter-spacing: 1px;
+}
+.group-count {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 900; color: #fff;
+}
+.gc-green { background: #4a9b7f; }
+.gc-amber { background: #f0a500; }
+.gc-grey  { background: #b0b8c4; }
+.gc-blue  { background: #5b8dee; }
+.group-chevron { font-size: 11px; color: #b0b8c4; transition: transform 0.2s; }
+.group-chevron.open { transform: rotate(180deg); }
+.popup-group-rows { overflow: hidden; transition: max-height 0.3s ease; }
+.popup-group-rows.collapsed { max-height: 0 !important; }
+
+/* ── TIMELINE POPUP ── */
+.timeline-popup {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(245,248,252,0.98);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.8);
+  border-radius: 20px 20px 0 0;
+  padding: 0 0 32px;
+  z-index: 102;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  max-height: 80vh;
+  display: flex; flex-direction: column;
+}
+.timeline-popup.visible { transform: translateY(0); }
+.timeline-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 28px 14px;
+  border-bottom: 1px solid rgba(45,51,64,0.08); flex-shrink: 0;
+}
+.timeline-back {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(45,51,64,0.08); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #5a6478; transition: background 0.15s; flex-shrink: 0;
+}
+.timeline-back:hover { background: rgba(45,51,64,0.14); }
+.timeline-header-info { flex: 1; }
+.timeline-id { font-size: 13px; font-weight: 700; color: #8a94a6; margin-bottom: 2px; }
+.timeline-title-text { font-size: 22px; font-weight: 900; color: #2d3340; letter-spacing: -0.3px; line-height: 1.2; }
+.timeline-close {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(45,51,64,0.08); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #5a6478; transition: background 0.15s;
+}
+.timeline-close:hover { background: rgba(45,51,64,0.14); }
+.timeline-body { overflow-y: auto; flex: 1; padding: 20px 28px 8px; }
+.timeline-body::-webkit-scrollbar { width: 4px; }
+.timeline-body::-webkit-scrollbar-thumb { background: rgba(45,51,64,0.1); border-radius: 2px; }
+.problem-summary {
+  background: rgba(45,51,64,0.04); border-radius: 12px; padding: 16px 18px;
+  margin-bottom: 24px; font-size: 15px; font-weight: 500; color: #2d3340; line-height: 1.6;
+}
+.timeline-track { position: relative; padding-left: 32px; margin-bottom: 24px; }
+.timeline-track::before {
+  content: ''; position: absolute; left: 10px; top: 8px; bottom: 8px;
+  width: 2px; background: rgba(45,51,64,0.1);
+}
+.timeline-step { position: relative; margin-bottom: 28px; animation: rowIn 0.3s ease both; }
+.timeline-step:last-child { margin-bottom: 0; }
+.timeline-step-dot {
+  position: absolute; left: -26px; top: 5px;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(45,51,64,0.12);
+}
+.timeline-step-dot.active { box-shadow: 0 0 0 3px rgba(74,155,127,0.35); }
+.timeline-step-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #8a94a6; margin-bottom: 4px; }
+.timeline-step-label.active { color: #4a9b7f; }
+.timeline-step-main { font-size: 16px; font-weight: 700; color: #2d3340; line-height: 1.3; }
+.timeline-step-sub { font-size: 13px; color: #8a94a6; margin-top: 3px; }
+.timeline-step-note {
+  margin-top: 8px; padding: 10px 14px;
+  background: rgba(45,51,64,0.04); border-radius: 8px;
+  font-size: 14px; color: #2d3340; line-height: 1.5;
+}
+.timeline-step.pending .timeline-step-main { color: #b0b8c4; }
+.timeline-step.pending .timeline-step-sub { color: #c8cfd8; }
+.timeline-actions {
+  padding: 16px 28px 0; flex-shrink: 0;
+  border-top: 1px solid rgba(45,51,64,0.08);
+  display: flex; gap: 10px;
+}
+.tl-btn-primary {
+  flex: 1; padding: 14px; background: #2d3340; color: #fff;
+  border: none; border-radius: 10px; font-size: 15px; font-weight: 800;
+  font-family: 'Barlow', sans-serif; cursor: pointer; transition: background 0.15s;
+}
+.tl-btn-primary:hover { background: #4a9b7f; }
+.tl-btn-secondary {
+  padding: 14px 20px; background: rgba(45,51,64,0.08); color: #2d3340;
+  border: none; border-radius: 10px; font-size: 15px; font-weight: 800;
+  font-family: 'Barlow', sans-serif; cursor: pointer; transition: background 0.15s;
+}
+.tl-btn-secondary:hover { background: rgba(45,51,64,0.14); }
+
+/* ── TOP BAR ── */
+.topbar { position: relative; z-index: 2; padding: 18px 0 0; flex-shrink: 0; width: 100%; }
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 36px 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.7);
+}
+.topbar-logo { font-size: 22px; font-weight: 900; color: #2d3340; letter-spacing: -0.5px; line-height: 1; }
+.topbar-logo em { color: #4a9b7f; font-style: normal; }
+.topbar-right { font-size: 22px; font-weight: 400; color: #2d3340; letter-spacing: -0.3px; line-height: 1; }
+
+/* ── SIDEBAR ── */
+.app-layout { display: flex; height: 100%; overflow: hidden; }
+.sidebar {
+  width: 52px; flex-shrink: 0; background: #b0bcd0;
+  border-right: 1px solid rgba(255,255,255,0.7);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 0 20px; gap: 4px; position: relative; z-index: 2; height: 100%;
+}
+.sidebar-logo-mark {
+  width: 52px; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px; flex-shrink: 0; padding-top: 18px; padding-bottom: 12px;
+}
+.sidebar-logo-mark span { font-size: 16px; font-weight: 900; color: #2d3340; letter-spacing: -0.5px; }
+.sidebar-logo-mark em { color: #4a9b7f; font-style: normal; }
+.sidebar-item {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative; border: none; background: transparent; transition: all 0.15s;
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.5); }
+.sidebar-item svg { width: 18px; height: 18px; stroke: #2d3340; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0.55; transition: opacity 0.15s; }
+.sidebar-item:hover svg { opacity: 1; }
+.sidebar-item.insight svg { stroke: #4a9b7f; opacity: 0.9; filter: drop-shadow(0 0 4px rgba(74,155,127,0.4)); }
+.sidebar-item .tip {
+  position: absolute; left: 54px; top: 50%; transform: translateY(-50%);
+  background: rgba(45,51,64,0.88); color: #fff; font-size: 11px; font-weight: 700;
+  padding: 5px 10px; border-radius: 7px; white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 0.15s; font-family: 'Barlow', sans-serif; z-index: 200;
+}
+.sidebar-item:hover .tip { opacity: 1; }
+.sidebar-notif {
+  position: absolute; top: 6px; right: 6px; width: 14px; height: 14px;
+  background: #e05a5a; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 900; color: #fff; border: 2px solid rgba(205,213,224,0.8);
+}
+.main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* ── GAFFA BUTTON ── */
+.gaffa-btn {
+  position: fixed; top: 16px; right: 16px;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.55); backdrop-filter: blur(12px);
+  border: 1px solid rgba(74,155,127,0.25); border-radius: 50px;
+  padding: 7px 14px 7px 8px; cursor: pointer; transition: all 0.2s;
+  z-index: 10; box-shadow: 0 4px 20px rgba(74,155,127,0.12);
+}
+.gaffa-btn:hover { background: rgba(255,255,255,0.8); box-shadow: 0 6px 28px rgba(74,155,127,0.22); transform: translateY(-1px); }
+.gaffa-btn-icon {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(135deg, #4a9b7f, #2d7a60);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(74,155,127,0.4);
+}
+.gaffa-btn-icon svg { width: 12px; height: 12px; stroke: #fff; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gaffa-btn-text { display: flex; flex-direction: column; }
+.gaffa-btn-label { font-size: 11px; font-weight: 900; color: #2d3340; letter-spacing: -0.2px; line-height: 1.1; }
+.gaffa-btn-sub { font-size: 9px; font-weight: 500; color: #8a94a6; line-height: 1.2; }
+
+/* ── TOPBAR ── */
+.topbar {
+  flex-shrink: 0;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.5);
+  position: relative; z-index: 2;
+}
+.topbar-team {
+  font-size: 28px; font-weight: 900;
+  color: #2d3340; letter-spacing: -0.5px; line-height: 1;
+}
+.topbar-team em { color: #4a9b7f; font-style: normal; }
+
+
+.gaffa-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 380px;
+  background: rgba(245,248,252,0.97); backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(255,255,255,0.8); z-index: 200;
+  transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  display: flex; flex-direction: column; box-shadow: -8px 0 40px rgba(45,51,64,0.15);
+}
+.gaffa-panel.visible { transform: translateX(0); }
+.gaffa-panel-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 20px 20px 16px; border-bottom: 1px solid rgba(45,51,64,0.08); flex-shrink: 0;
+}
+.gaffa-panel-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, #4a9b7f, #2d7a60);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(74,155,127,0.35);
+}
+.gaffa-panel-icon svg { width: 18px; height: 18px; stroke: #fff; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gaffa-panel-title { flex: 1; }
+.gaffa-panel-name { font-size: 20px; font-weight: 900; color: #2d3340; letter-spacing: -0.3px; line-height: 1; }
+.gaffa-panel-name em { color: #4a9b7f; font-style: normal; }
+.gaffa-panel-status { font-size: 11px; font-weight: 600; color: #4a9b7f; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+.gaffa-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #4a9b7f; animation: bpulse 2.2s ease-in-out infinite; }
+.gaffa-close {
+  width: 32px; height: 32px; border-radius: 50%; background: rgba(45,51,64,0.08);
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #5a6478; transition: background 0.15s;
+}
+.gaffa-close:hover { background: rgba(45,51,64,0.14); }
+.gaffa-chat-area { flex: 1; overflow-y: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; }
+.gaffa-chat-area::-webkit-scrollbar { width: 4px; }
+.gaffa-chat-area::-webkit-scrollbar-thumb { background: rgba(45,51,64,0.1); border-radius: 2px; }
+.gaffa-welcome {
+  background: rgba(74,155,127,0.06); border: 1px solid rgba(74,155,127,0.15);
+  border-radius: 16px; padding: 18px; font-size: 14px; font-weight: 500; color: #2d3340; line-height: 1.6;
+}
+.gaffa-welcome strong { font-weight: 800; color: #2d3340; }
+.gaffa-suggestions { display: flex; flex-direction: column; gap: 8px; }
+.gaffa-suggestion {
+  padding: 12px 16px; background: rgba(255,255,255,0.8);
+  border: 1px solid rgba(45,51,64,0.08); border-radius: 12px;
+  font-size: 13px; font-weight: 600; color: #2d3340; cursor: pointer;
+  transition: all 0.15s; text-align: left; font-family: 'Barlow', sans-serif;
+}
+.gaffa-suggestion:hover { border-color: rgba(74,155,127,0.3); background: rgba(74,155,127,0.05); color: #4a9b7f; }
+.gaffa-input-area {
+  padding: 14px 16px; border-top: 1px solid rgba(45,51,64,0.08);
+  display: flex; gap: 10px; align-items: center; flex-shrink: 0;
+}
+.gaffa-input {
+  flex: 1; padding: 12px 16px; background: rgba(45,51,64,0.05);
+  border: 1px solid rgba(45,51,64,0.1); border-radius: 24px;
+  font-size: 14px; font-family: 'Barlow', sans-serif; color: #2d3340; outline: none; transition: border 0.15s;
+}
+.gaffa-input:focus { border-color: rgba(74,155,127,0.4); }
+.gaffa-input::placeholder { color: #b0b8c4; }
+.gaffa-send {
+  width: 40px; height: 40px; border-radius: 50%; background: #2d3340; border: none;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background 0.15s;
+}
+.gaffa-send:hover { background: #4a9b7f; }
+.gaffa-send svg { width: 16px; height: 16px; stroke: #fff; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+</style>
+</head>
+<body>
+
+<!-- LOADING BAR -->
+<div class="loading-bar" id="loadingBar"></div>
+
+<div class="app-layout">
+
+<aside class="sidebar">
+  <div class="sidebar-item insight" onclick="openSidePanel('insight')">
+    <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4.5 6.5V17a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+    <span class="tip">Anttro Insight</span>
+  </div>
+  <div class="sidebar-item" onclick="openSidePanel('attention')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div class="sidebar-notif">4</div>
+    <span class="tip">Needs Attention</span>
+  </div>
+  <div class="sidebar-item" onclick="openSidePanel('comingup')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span class="tip">Coming Up</span>
+  </div>
+</aside>
+
+<div class="main-area">
+
+<div class="topbar">
+  <div class="topbar-team" id="topbarTeam">Dashboard<em>.</em></div>
+</div>
+
+<div class="shapes-area">
+
+  <div class="row">
+
+  <!-- SnapShot -->
+  <div class="node">
+    <div class="node-title node-title-snapshot" style="width:270px;text-align:right;">SnapShot.</div>
+    <div class="shape-wrap">
+      <svg class="shape-svg" viewBox="0 0 240 265" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="ss1" cx="15%" cy="85%" r="75%"><stop offset="0%" stop-color="#ffcc00"/><stop offset="40%" stop-color="#ff9020"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ss2" cx="75%" cy="8%" r="58%"><stop offset="0%" stop-color="#ff10a0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ss3" cx="95%" cy="5%" r="40%"><stop offset="0%" stop-color="#6010b0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4" stitchTiles="stitch" result="noise"/><feColorMatrix type="saturate" values="0" in="noise" result="g"/><feBlend in="SourceGraphic" in2="g" mode="soft-light"/></filter>
+          <clipPath id="c1"><path d="M 240,25 L 120,25 A 120,120 0 1,0 240,145 Z"/></clipPath>
+        </defs>
+        <g clip-path="url(#c1)">
+          <rect width="240" height="265" fill="#f07030"/>
+          <rect width="240" height="265" fill="url(#ss1)"/>
+          <rect width="240" height="265" fill="url(#ss2)"/>
+          <rect width="240" height="265" fill="url(#ss3)"/>
+          <rect width="240" height="265" filter="url(#gr)" opacity="0.22"/>
+        </g>
+      </svg>
+      <div class="shape-num" id="num-snapshot">14</div>
+      <div class="new-bubble" onclick="openNewPopup()"><span id="new-count">3</span></div>
+    </div>
+  </div>
+
+  <!-- Connector: To Action -->
+  <div class="connector">
+    <div class="connector-line"></div>
+    <div class="flow-bubble" onclick="openFlowPopup('toaction')" style="cursor:pointer">
+      <span class="fb-label">To Action</span>
+      <span class="fb-num" id="fb-toaction">2</span>
+    </div>
+    <div class="connector-line"></div>
+  </div>
+
+  <!-- ActionPlan -->
+  <div class="node">
+    <div class="node-title node-title-center" style="width:270px;text-align:center;margin-left:-4px;">ActionPlan.</div>
+    <div class="shape-wrap">
+      <svg class="shape-svg" viewBox="0 0 240 265" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="ap1" cx="22%" cy="22%" r="62%"><stop offset="0%" stop-color="#9878e0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ap2" cx="78%" cy="18%" r="50%"><stop offset="0%" stop-color="#6040c0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ap3" cx="52%" cy="90%" r="48%"><stop offset="0%" stop-color="#f0c020"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ap4" cx="12%" cy="78%" r="42%"><stop offset="0%" stop-color="#6040c0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <clipPath id="c2"><circle cx="120" cy="145" r="120"/></clipPath>
+        </defs>
+        <g clip-path="url(#c2)">
+          <rect width="240" height="265" fill="#5040b0"/>
+          <rect width="240" height="265" fill="url(#ap1)"/>
+          <rect width="240" height="265" fill="url(#ap2)"/>
+          <rect width="240" height="265" fill="url(#ap3)"/>
+          <rect width="240" height="265" fill="url(#ap4)"/>
+          <rect width="240" height="265" filter="url(#gr)" opacity="0.22"/>
+        </g>
+      </svg>
+      <div class="shape-num" id="num-actionplan">12</div>
+    </div>
+  </div>
+
+  <!-- Connector: To Review -->
+  <div class="connector">
+    <div class="connector-line"></div>
+    <div class="flow-bubble" onclick="openFlowPopup('toreview')" style="cursor:pointer">
+      <span class="fb-label">To Review</span>
+      <span class="fb-num" id="fb-toreview">1</span>
+    </div>
+    <div class="connector-line"></div>
+  </div>
+
+  <!-- ReShot -->
+  <div class="node">
+    <div class="node-title node-title-right" style="width:270px;text-align:right;">ReShot.</div>
+    <div class="shape-wrap">
+      <svg class="shape-svg" viewBox="0 0 240 265" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="rs1" cx="20%" cy="25%" r="65%"><stop offset="0%" stop-color="#e8f8ff"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="rs2" cx="85%" cy="8%" r="55%"><stop offset="0%" stop-color="#00e8ff"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="rs3" cx="90%" cy="45%" r="44%"><stop offset="0%" stop-color="#9040f0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="rs4" cx="45%" cy="95%" r="48%"><stop offset="0%" stop-color="#ffd000"/><stop offset="40%" stop-color="#ff9000"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <clipPath id="c3"><path d="M 240,25 L 120,25 A 120,120 0 1,0 240,145 Z"/></clipPath>
+        </defs>
+        <g clip-path="url(#c3)">
+          <rect width="240" height="265" fill="#60c0f0"/>
+          <rect width="240" height="265" fill="url(#rs1)"/>
+          <rect width="240" height="265" fill="url(#rs2)"/>
+          <rect width="240" height="265" fill="url(#rs3)"/>
+          <rect width="240" height="265" fill="url(#rs4)"/>
+          <rect width="240" height="265" filter="url(#gr)" opacity="0.18"/>
+        </g>
+      </svg>
+      <div class="shape-num" id="num-reshot">6</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div style="text-align:right; padding:8px 36px 6px; position:relative; z-index:1;"><span style="font-size:11px;font-weight:600;opacity:0.5;letter-spacing:0.5px;color:#2a3050;margin-right:6px;">POWERED BY</span><span style="font-size:20px;font-weight:900;letter-spacing:-0.5px;color:#2a3050;opacity:0.6;">Anttro<em style="color:#4a9b7f;font-style:normal;">.</em></span></div>
+
+<!-- STAT BAR -->
+<div class="stat-bar">
+  <div class="stat-item">
+    <div class="stat-dot" style="background:#4a9b7f;box-shadow:0 0 6px rgba(74,155,127,0.6)"></div>
+    <div class="stat-text">
+      <div class="stat-label">Loops Closed</div>
+      <div class="stat-value" id="stat-loops">3</div>
+    </div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:#f0a500;box-shadow:0 0 6px rgba(240,165,0,0.5)"></div>
+    <div class="stat-text">
+      <div class="stat-label">Avg. SnapShot to Close</div>
+      <div class="stat-value" id="stat-avg">18 days</div>
+    </div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:#5b8dee;box-shadow:0 0 6px rgba(91,141,238,0.5)"></div>
+    <div class="stat-text">
+      <div class="stat-label">Closed This Month</div>
+      <div class="stat-value" id="stat-month">1</div>
+    </div>
+  </div>
+</div>
+
+<div class="chart-container">
+  <div class="chart-top">
+    <div class="chart-title" id="chart-label">SnapShot submissions — May 2026</div>
+    <div class="toggle">
+      <button class="toggle-btn active" onclick="setView('daily', this)">Daily</button>
+      <button class="toggle-btn" onclick="setView('weekly', this)">Weekly</button>
+      <button class="toggle-btn" onclick="setView('monthly', this)">Monthly</button>
+    </div>
+  </div>
+  <div class="chart-wrap">
+    <svg class="chart-svg" id="chartSvg" viewBox="0 0 1000 110" preserveAspectRatio="none"></svg>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<!-- POPUP OVERLAY -->
+<div class="popup-overlay" id="popupOverlay" onclick="closePopup()"></div>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-handle"></div>
+  <div class="popup-header">
+    <div>
+      <div class="popup-title" id="popupTitle">SnapShot.</div>
+      <div class="popup-count" id="popupCount"></div>
+    </div>
+    <button class="popup-close" onclick="closePopup()">✕</button>
+  </div>
+  <div class="popup-list" id="popupList"></div>
+</div>
+
+<!-- TIMELINE POPUP -->
+<div class="timeline-popup" id="timelinePopup">
+  <div class="popup-handle"></div>
+  <div class="timeline-header">
+    <button class="timeline-back" id="timelineBack">←</button>
+    <div class="timeline-header-info">
+      <div class="timeline-id" id="timelineId"></div>
+      <div class="timeline-title-text" id="timelineTitleText"></div>
+    </div>
+    <button class="timeline-close" onclick="closeTimeline()">✕</button>
+  </div>
+  <div class="timeline-body" id="timelineBody"></div>
+  <div class="timeline-actions" id="timelineActions"></div>
+</div>
+
+<!-- GAFFA SIDE PANEL -->
+<div class="gaffa-panel" id="gaffaPanel">
+  <div class="gaffa-panel-header">
+    <div class="gaffa-panel-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4.5 6.5V17a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+    </div>
+    <div class="gaffa-panel-title">
+      <div class="gaffa-panel-name">The Gaffa<em>.</em></div>
+      <div class="gaffa-panel-status"><div class="gaffa-status-dot"></div>AI Assistant · Ready</div>
+    </div>
+    <button class="gaffa-close" onclick="toggleGaffa()">✕</button>
+  </div>
+  <div class="gaffa-chat-area" id="gaffaChatArea">
+    <div class="gaffa-welcome">
+      <strong>Hey, I'm The Gaffa.</strong><br>
+      I'm here to help you implement your ActionPlans, work through problems, and apply lean tools to your team's issues. What are you working on today?
+    </div>
+    <div class="gaffa-suggestions">
+      <button class="gaffa-suggestion">💡 Help me build an ActionPlan for a problem</button>
+      <button class="gaffa-suggestion">🔍 Walk me through a 5 Whys analysis</button>
+      <button class="gaffa-suggestion">📋 Help me run a SIPOC on a process</button>
+      <button class="gaffa-suggestion">⚡ What lean tool should I use?</button>
+      <button class="gaffa-suggestion">📅 How do I structure a review date?</button>
+    </div>
+  </div>
+  <div class="gaffa-input-area">
+    <input class="gaffa-input" type="text" placeholder="Ask The Gaffa anything…" id="gaffaInput"/>
+    <button class="gaffa-send">
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+
+// ── CHART DATA (fallback) ──
+let daily = [0,0,1,0,2,1,0,3,1,2,0,1,4,2,1,3,0,2,1,3,2,4,1,2,3,1,2,0,1,2,3];
+let weekly = [3,7,5,9,12,8,6,11,4,14,9,7];
+let monthly = [4,7,3,9,12,8,5,11,6,14,9,7];
+const weekLabels = ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12'];
+const monthNames = ['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'];
+
+// ── LOADING BAR ──
+function startLoading() {
+  const bar = document.getElementById('loadingBar');
+  bar.style.width = '0%'; bar.style.opacity = '1';
+  setTimeout(() => bar.style.width = '30%', 50);
+  setTimeout(() => bar.style.width = '60%', 300);
+  setTimeout(() => bar.style.width = '85%', 700);
+}
+function finishLoading() {
+  const bar = document.getElementById('loadingBar');
+  bar.style.width = '100%';
+  setTimeout(() => {
+    bar.style.opacity = '0';
+    setTimeout(() => { bar.style.display = 'none'; }, 400);
+  }, 200);
+}
+
+// ── CHART ──
+function smoothPath(points, vw, vh, padL, padR, padT, padB) {
+  const n = points.length;
+  const max = Math.max(...points, 1);
+  const xs = points.map((_, i) => padL + (i / (n-1)) * (vw - padL - padR));
+  const ys = points.map(v => padT + (1 - v/max) * (vh - padT - padB));
+  let d = `M ${xs[0]},${ys[0]}`;
+  for (let i = 1; i < n; i++) {
+    const cpx1 = xs[i-1] + (xs[i]-xs[i-1])/3;
+    const cpx2 = xs[i] - (xs[i]-xs[i-1])/3;
+    d += ` C ${cpx1},${ys[i-1]} ${cpx2},${ys[i]} ${xs[i]},${ys[i]}`;
+  }
+  return { d, xs, ys };
+}
+
+function renderChart(view) {
+  const svg = document.getElementById('chartSvg');
+  if (!svg) return;
+  const vw = 1000, vh = 110, padL = 8, padR = 8, padT = 10, padB = 26;
+  const data = view === 'daily' ? daily : view === 'weekly' ? weekly : monthly;
+  const labels = view === 'daily' ? data.map((_,i) => i+1) : view === 'weekly' ? weekLabels : monthNames;
+  const { d, xs, ys } = smoothPath(data, vw, vh, padL, padR, padT, padB);
+  const fillD = d + ` L ${xs[xs.length-1]},${vh-padB} L ${xs[0]},${vh-padB} Z`;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(255,120,60,0.35)"/>
+        <stop offset="100%" stop-color="rgba(240,60,140,0)"/>
+      </linearGradient>
+    </defs>
+    <line x1="${padL}" y1="${padT}" x2="${vw-padR}" y2="${padT}" stroke="rgba(45,51,64,0.06)" stroke-width="1"/>
+    <line x1="${padL}" y1="${padT+(vh-padT-padB)/2}" x2="${vw-padR}" y2="${padT+(vh-padT-padB)/2}" stroke="rgba(45,51,64,0.06)" stroke-width="1"/>
+    <path d="${fillD}" fill="url(#lg)"/>
+    <path d="${d}" fill="none" stroke="rgba(255,100,60,0.9)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${xs.map((x,i) => `
+      <circle cx="${x}" cy="${ys[i]}" r="3.5" fill="rgba(255,100,60,0.9)" class="chart-dot" data-val="${data[i]}" data-label="${labels[i]}" style="cursor:pointer"/>
+      <text x="${x}" y="${vh-5}" font-size="${view==='daily'?'10':'11'}" fill="rgba(255,255,255,0.7)" font-family="Barlow,sans-serif" font-weight="600" text-anchor="middle">${labels[i]}</text>
+    `).join('')}
+  `;
+  svg.querySelectorAll('.chart-dot').forEach(dot => {
+    dot.addEventListener('mouseenter', () => {
+      const tt = document.getElementById('tooltip');
+      const svgRect = svg.getBoundingClientRect();
+      const wrapRect = document.querySelector('.chart-wrap').getBoundingClientRect();
+      const scaleX = svgRect.width / vw;
+      const cx = parseFloat(dot.getAttribute('cx')) * scaleX + svgRect.left - wrapRect.left;
+      const cy = parseFloat(dot.getAttribute('cy')) * (svgRect.height/vh) - 36;
+      tt.style.left = cx + 'px'; tt.style.top = cy + 'px';
+      tt.textContent = `${dot.dataset.label}: ${dot.dataset.val} SnapShots`;
+      tt.classList.add('visible');
+    });
+    dot.addEventListener('mouseleave', () => document.getElementById('tooltip').classList.remove('visible'));
+  });
+}
+
+function setView(view, btn) {
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const now = new Date();
+  document.getElementById('chart-label').textContent = view === 'daily'
+    ? `SnapShot submissions — ${now.toLocaleString('default',{month:'long'})} ${now.getFullYear()}`
+    : view === 'weekly' ? 'SnapShot submissions — Last 12 weeks'
+    : 'SnapShot submissions — Last 12 months';
+  renderChart(view);
+}
+
+// ── LIVE DATA ──
+async function loadDashboardData() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const teamId = new URLSearchParams(window.location.search).get('team');
+    const url = teamId ? `/api/data?team=${teamId}` : '/api/data';
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error('API not available');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const { teamName, stats, chart, rows, newSnapshots } = data;
+
+    // ── TEAM NAME ──
+    if (teamName) {
+      document.getElementById('topbarTeam').innerHTML = `${teamName} Dashboard<em>.</em>`;
+    }
+
+    // ── SIDE PANELS — wire to live data ──
+    if (data.needsAttention) {
+      sidePanels.attention.html = data.needsAttention.length === 0
+        ? `<div style="padding:20px 0;text-align:center;color:#8a94a6;font-size:14px;font-weight:600">No items need attention right now 👍</div>`
+        : `<div style="padding:8px 0 20px">${data.needsAttention.map((item, i) => `
+          <div class="popup-row" style="animation-delay:${i*0.04}s">
+            <div class="row-status-dot" style="background:${item.dot}"></div>
+            <div class="row-info">
+              <div class="row-title">${item.title}</div>
+              <div class="row-meta">${item.sub}</div>
+            </div>
+            <button class="row-btn">${item.btn}</button>
+          </div>`).join('')}</div>`;
+      // Update sidebar notif count
+      const notif = document.querySelector('.sidebar-notif');
+      if (notif) notif.textContent = data.needsAttention.length;
+    }
+
+    if (data.comingUp) {
+      sidePanels.comingup.html = data.comingUp.length === 0
+        ? `<div style="padding:20px 0;text-align:center;color:#8a94a6;font-size:14px;font-weight:600">Nothing coming up in the next 30 days.</div>`
+        : `<div style="padding:8px 0 20px">${data.comingUp.map((item, i) => `
+          <div class="popup-row" style="animation-delay:${i*0.04}s">
+            <div class="row-status-dot" style="background:${item.dot}"></div>
+            <div class="row-info">
+              <div class="row-title">${item.title}</div>
+              <div class="row-meta">${item.sub}</div>
+            </div>
+            <button class="row-btn">${item.btn}</button>
+          </div>`).join('')}</div>`;
+    }
+
+    if (data.insight) {
+      sidePanels.insight.html = `
+        <div style="padding:8px 0 20px">
+          <div style="background:rgba(74,155,127,0.08);border:1px solid rgba(74,155,127,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px">
+            <div style="font-size:11px;font-weight:800;color:#4a9b7f;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Loop Health</div>
+            <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">${data.insight.loopHealth}</div>
+          </div>
+          <div style="background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px">
+            <div style="font-size:11px;font-weight:800;color:#d4920a;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Trend</div>
+            <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">${data.insight.trend}</div>
+          </div>
+          <div style="background:rgba(91,141,238,0.08);border:1px solid rgba(91,141,238,0.2);border-radius:14px;padding:18px 20px">
+            <div style="font-size:11px;font-weight:800;color:#3d6fd4;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Recommendation</div>
+            <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">${data.insight.recommendation}</div>
+          </div>
+        </div>`;
+    }
+    document.getElementById('num-snapshot').textContent = stats.totalSnapshots;
+    document.getElementById('num-actionplan').textContent = stats.totalActionPlans;
+    document.getElementById('num-reshot').textContent = stats.totalReshots;
+    document.getElementById('fb-toaction').textContent = stats.snapshotOpen;
+    document.getElementById('fb-toreview').textContent = stats.actionPlanOpen;
+    document.getElementById('new-count').textContent = newSnapshots.length;
+    if (newSnapshots.length === 0) document.querySelector('.new-bubble').style.display = 'none';
+    document.getElementById('stat-loops').textContent = stats.loopsClosed;
+    document.getElementById('stat-avg').textContent = stats.avgDaysToClose ? `${Math.abs(stats.avgDaysToClose)} days` : '—';
+    document.getElementById('stat-month').textContent = stats.closedThisMonth;
+    popupData.snapshot = rows.snapshots;
+    popupData.actionplan = rows.actionplans;
+    popupData.reshot = rows.reshots;
+    window._newSnapshots = newSnapshots;
+    daily = chart.daily; weekly = chart.weekly; monthly = chart.monthly;
+  } catch (err) {
+    console.log('Using placeholder data:', err.message);
+  }
+  renderChart('daily');
+}
+
+window.addEventListener('load', () => {
+  startLoading();
+  loadDashboardData().finally(() => finishLoading());
+});
+
+// ── SIDE PANEL DATA ──
+const sidePanels = {
+  insight: {
+    title: 'Anttro\u2019s Insight',
+    html: `
+      <div style="padding:8px 0 20px">
+        <div style="background:rgba(74,155,127,0.08);border:1px solid rgba(74,155,127,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:800;color:#4a9b7f;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Loop Health</div>
+          <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">Your team has <strong>5 open SnapShots</strong> with no ActionPlan started. The average time from SnapShot to ActionPlan is <strong>4 days</strong>. 2 review dates are coming up in the next 14 days.</div>
+        </div>
+        <div style="background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:800;color:#d4920a;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Trend</div>
+          <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">SnapShot submissions are up <strong>40% this month</strong> compared to last. This is a positive sign of team engagement with the loop process.</div>
+        </div>
+        <div style="background:rgba(91,141,238,0.08);border:1px solid rgba(91,141,238,0.2);border-radius:14px;padding:18px 20px">
+          <div style="font-size:11px;font-weight:800;color:#3d6fd4;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Recommendation</div>
+          <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">Prioritise starting ActionPlans for the 2 oldest open SnapShots. Both have been waiting over 6 days with no action taken.</div>
+        </div>
+      </div>
+    `
+  },
+  attention: {
+    title: 'Needs Attention',
+    html: `
+      <div style="padding:8px 0 20px">
+        ${[
+          { dot:'#e05a5a', title:'Bolts snapping on line 3', sub:'No ActionPlan · 6 days since SnapShot', btn:'Start ActionPlan' },
+          { dot:'#e05a5a', title:'Forklift bay markings faded', sub:'No ActionPlan · 9 days since SnapShot', btn:'Start ActionPlan' },
+          { dot:'#f0a500', title:'Scanner signal loss at hitch rack', sub:'ReShot overdue · 3 days past review date', btn:'Start ReShot' },
+          { dot:'#f0a500', title:'Packing station layout bottleneck', sub:'Review due in 2 days', btn:'View ActionPlan' },
+        ].map((item, i) => `
+          <div class="popup-row" style="animation-delay:${i*0.04}s">
+            <div class="row-status-dot" style="background:${item.dot}"></div>
+            <div class="row-info">
+              <div class="row-title">${item.title}</div>
+              <div class="row-meta">${item.sub}</div>
+            </div>
+            <button class="row-btn">${item.btn}</button>
+          </div>
+        `).join('')}
+      </div>
+    `
+  },
+  comingup: {
+    title: 'Coming Up',
+    html: `
+      <div style="padding:8px 0 20px">
+        ${[
+          { dot:'#f0a500', title:'Scanner signal loss \u2014 Review', sub:'In 2 days · 3 actions to review', btn:'View' },
+          { dot:'#4a9b7f', title:'Dispatch signage check', sub:'In 7 days · 2 actions to review', btn:'View' },
+          { dot:'#4a9b7f', title:'Packing station layout review', sub:'In 14 days · 4 actions to review', btn:'View' },
+        ].map((item, i) => `
+          <div class="popup-row" style="animation-delay:${i*0.04}s">
+            <div class="row-status-dot" style="background:${item.dot}"></div>
+            <div class="row-info">
+              <div class="row-title">${item.title}</div>
+              <div class="row-meta">${item.sub}</div>
+            </div>
+            <button class="row-btn">${item.btn}</button>
+          </div>
+        `).join('')}
+      </div>
+    `
+  }
+};
+
+function openSidePanel(type) {
+  const panel = sidePanels[type];
+  const list = document.getElementById('popupList');
+  document.getElementById('popupTitle').textContent = panel.title;
+  document.getElementById('popupCount').textContent = '';
+  list.innerHTML = panel.html;
+  document.getElementById('popupOverlay').classList.add('visible');
+  document.getElementById('popup').classList.add('visible');
+}
+
+// ── POPUP DATA ──
+const popupData = {
+  snapshot: [
+    { id:'ANT-010-001', title:'Scanner signal loss at hitch rack area', by:'Aidan Soulsby', date:'7 May 2026', status:'ActionPlan Active', badge:'badge-ap', dot:'dot-amber', btn:'View Slides' },
+    { id:'ANT-010-002', title:'Bolts snapping during tightening on line 3', by:'Tom Harris', date:'5 May 2026', status:'SnapShot Complete', badge:'badge-ss', dot:'dot-green', btn:'Start ActionPlan' },
+    { id:'ANT-010-003', title:'Missing safety signage in dispatch area', by:'Emma Clarke', date:'12 Apr 2026', status:'Loop Closed', badge:'badge-cl', dot:'dot-grey', btn:'View Slides' },
+    { id:'ANT-010-004', title:'Packing station layout causing bottleneck', by:'James Mills', date:'28 Apr 2026', status:'ActionPlan Active', badge:'badge-ap', dot:'dot-amber', btn:'View Slides' },
+    { id:'ANT-010-005', title:'Forklift bay floor markings faded', by:'Aidan Soulsby', date:'2 May 2026', status:'SnapShot Complete', badge:'badge-ss', dot:'dot-green', btn:'Start ActionPlan' },
+  ],
+  actionplan: [
+    { id:'ANT-010-001-AP1', title:'Scanner signal loss at hitch rack area', by:'Sarah Johnson', date:'8 May 2026', status:'Active · Review 7 Jun', badge:'badge-ap', dot:'dot-amber', btn:'View ActionPlan' },
+    { id:'ANT-010-004-AP1', title:'Packing station layout causing bottleneck', by:'Sarah Johnson', date:'30 Apr 2026', status:'Active · Review 30 May', badge:'badge-ap', dot:'dot-amber', btn:'View ActionPlan' },
+    { id:'ANT-010-003-AP1', title:'Missing safety signage in dispatch area', by:'Sarah Johnson', date:'15 Apr 2026', status:'Closed', badge:'badge-cl', dot:'dot-grey', btn:'View ActionPlan' },
+  ],
+  reshot: [
+    { id:'ANT-010-003-RS1', title:'Missing safety signage in dispatch area', by:'Sarah Johnson', date:'8 Jun 2026', status:'Loop Closed', badge:'badge-cl', dot:'dot-grey', btn:'View ReShot' },
+    { id:'ANT-010-001-RS1', title:'Scanner signal loss at hitch rack area', by:'Sarah Johnson', date:'Due 7 Jun 2026', status:'ReShot Due', badge:'badge-rs', dot:'dot-blue', btn:'Start ReShot' },
+  ]
+};
+
+const popupTitles = { snapshot:'SnapShot.', actionplan:'ActionPlan.', reshot:'ReShot.' };
+
+function buildGroup(label, countClass, rows, defaultOpen) {
+  if (!rows.length) return '';
+  const id = 'grp-' + Math.random().toString(36).slice(2);
+  const rowsHtml = rows.map((row, i) => `
+    <div class="popup-row" style="animation-delay:${i*0.04}s">
+      <div class="row-status-dot ${row.dot}"></div>
+      <div class="row-id">${row.id}</div>
+      <div class="row-info">
+        <div class="row-title">${row.title}</div>
+        <div class="row-meta">${row.by} · ${row.date}</div>
+      </div>
+      <button class="row-btn">${row.btn}</button>
+    </div>
+  `).join('');
+  return `
+    <div class="popup-group-header" onclick="toggleGroup('${id}')">
+      <div class="group-label">
+        <div class="group-count ${countClass}">${rows.length}</div>
+        ${label}
+      </div>
+      <span class="group-chevron ${defaultOpen ? 'open' : ''}" id="chev-${id}">▼</span>
+    </div>
+    <div class="popup-group-rows ${defaultOpen ? '' : 'collapsed'}" id="${id}" style="max-height:${defaultOpen ? rows.length * 80 + 'px' : '0'}">
+      ${rowsHtml}
+    </div>
+  `;
+}
+
+function toggleGroup(id) {
+  const el = document.getElementById(id);
+  const chev = document.getElementById('chev-' + id);
+  const isOpen = !el.classList.contains('collapsed');
+  if (isOpen) { el.classList.add('collapsed'); chev.classList.remove('open'); }
+  else { el.style.maxHeight = el.scrollHeight + 'px'; el.classList.remove('collapsed'); chev.classList.add('open'); }
+}
+
+function openNewPopup() {
+  const newItems = window._newSnapshots || popupData.snapshot.filter(r => r.status === 'SnapShot Complete');
+  const list = document.getElementById('popupList');
+  document.getElementById('popupTitle').textContent = 'New SnapShots.';
+  document.getElementById('popupCount').textContent = newItems.length + ' new since your last visit';
+  list.innerHTML = newItems.map((row, i) => `
+    <div class="popup-row" style="animation-delay:${i*0.04}s">
+      <div class="row-status-dot dot-green"></div>
+      <div class="row-id">${row.id}</div>
+      <div class="row-info">
+        <div class="row-title">${row.title}</div>
+        <div class="row-meta">${row.by} · ${row.date}</div>
+      </div>
+      <button class="row-btn">View Slides</button>
+    </div>
+  `).join('');
+  document.getElementById('popupOverlay').classList.add('visible');
+  document.getElementById('popup').classList.add('visible');
+}
+
+function openFlowPopup(type) {
+  const list = document.getElementById('popupList');
+  if (type === 'toaction') {
+    const items = popupData.snapshot.filter(r => r.status === 'SnapShot Complete');
+    document.getElementById('popupTitle').textContent = 'Awaiting ActionPlan.';
+    document.getElementById('popupCount').textContent = items.length + ' SnapShots need an ActionPlan';
+    list.innerHTML = items.map((row, i) => `
+      <div class="popup-row" style="animation-delay:${i*0.04}s">
+        <div class="row-status-dot dot-green"></div>
+        <div class="row-id">${row.id}</div>
+        <div class="row-info">
+          <div class="row-title">${row.title}</div>
+          <div class="row-meta">${row.by} · ${row.date}</div>
+        </div>
+        <button class="row-btn">Start ActionPlan</button>
+      </div>
+    `).join('');
+  } else {
+    const items = popupData.actionplan.filter(r => r.status.startsWith('Active'));
+    document.getElementById('popupTitle').textContent = 'Awaiting ReShot.';
+    document.getElementById('popupCount').textContent = items.length + ' ActionPlans need a ReShot';
+    list.innerHTML = items.map((row, i) => `
+      <div class="popup-row" style="animation-delay:${i*0.04}s">
+        <div class="row-status-dot dot-amber"></div>
+        <div class="row-id">${row.id}</div>
+        <div class="row-info">
+          <div class="row-title">${row.title}</div>
+          <div class="row-meta">${row.by} · ${row.date}</div>
+        </div>
+        <button class="row-btn">Start ReShot</button>
+      </div>
+    `).join('');
+  }
+  document.getElementById('popupOverlay').classList.add('visible');
+  document.getElementById('popup').classList.add('visible');
+}
+
+function openPopup(type) {
+  const data = popupData[type];
+  const list = document.getElementById('popupList');
+  document.getElementById('popupTitle').textContent = popupTitles[type];
+  document.getElementById('popupCount').textContent = data.length + ' records';
+  const groups = {
+    snapshot: [
+      { label: 'SnapShot Complete', cls: 'gc-green', filter: r => r.status === 'SnapShot Complete', open: true },
+      { label: 'ActionPlan Active', cls: 'gc-amber', filter: r => r.status === 'ActionPlan Active', open: false },
+      { label: 'Loop Closed', cls: 'gc-grey', filter: r => r.status === 'Loop Closed', open: false },
+    ],
+    actionplan: [
+      { label: 'Active', cls: 'gc-amber', filter: r => r.status.startsWith('Active'), open: true },
+      { label: 'ReShot Due', cls: 'gc-blue', filter: r => r.status === 'ReShot Due', open: true },
+      { label: 'Closed', cls: 'gc-grey', filter: r => r.status === 'Closed', open: false },
+    ],
+    reshot: [
+      { label: 'ReShot Due', cls: 'gc-blue', filter: r => r.status === 'ReShot Due', open: true },
+      { label: 'Loop Closed', cls: 'gc-grey', filter: r => r.status === 'Loop Closed', open: false },
+    ]
+  };
+  list.innerHTML = (groups[type] || []).map(g => buildGroup(g.label, g.cls, data.filter(g.filter), g.open)).join('');
+  document.getElementById('popupOverlay').classList.add('visible');
+  document.getElementById('popup').classList.add('visible');
+}
+
+function closePopup() {
+  document.getElementById('popupOverlay').classList.remove('visible');
+  document.getElementById('popup').classList.remove('visible');
+}
+
+// Make shapes clickable
+document.addEventListener('DOMContentLoaded', () => {
+  const nodes = document.querySelectorAll('.node');
+  const types = ['snapshot', 'actionplan', 'reshot'];
+  nodes.forEach((node, i) => {
+    node.style.cursor = 'pointer';
+    node.addEventListener('click', () => openPopup(types[i]));
+  });
+});
+
+// ── TIMELINE DATA ──
+const timelineData = {
+  'ANT-010-001': {
+    id: 'ANT-010-001', title: 'Scanner signal loss at hitch rack area',
+    summary: 'Intermittent scanner signal dropout at the hitch rack area causing picking errors and delays. Issue first noticed during morning shift on 7 May. Affects approximately 12 scans per hour.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'Aidan Soulsby raised the problem', sub: '7 May 2026 · 08:42am', note: 'Scanner drops signal every 15–20 mins at hitch rack. Causing wrong picks and double-handling. Happened 3 times on morning shift already.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Started', active: true, dot: '#f0a500', main: 'Sarah Johnson created ActionPlan ANT-010-001-AP1', sub: '8 May 2026 · 10:15am', note: 'Actions: 1. IT to check router signal strength at hitch rack. 2. Relocate scanner cradle 2m closer to router. 3. Test signal stability for 48hrs post-move.' },
+      { stage: 'ReShot', label: 'ReShot Due', active: true, dot: '#5b8dee', main: 'Review scheduled', sub: '7 Jun 2026 · Review due', note: null },
+      { stage: 'Closed', label: 'Loop Closed', active: false, dot: '#b0b8c4', main: 'Awaiting ReShot', sub: 'Not yet completed', note: null, pending: true }
+    ],
+    primaryBtn: 'View Slides', secondaryBtn: 'View ActionPlan'
+  },
+  'ANT-010-002': {
+    id: 'ANT-010-002', title: 'Bolts snapping during tightening on line 3',
+    summary: 'Multiple bolt failures during standard torque application on assembly line 3. Three separate incidents in one week. Risk of component failure downstream if unresolved.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'Tom Harris raised the problem', sub: '5 May 2026 · 02:18pm', note: 'Bolts snapping at 60% of specified torque on line 3. Third occurrence this week. Using same batch as other lines with no issues — may be a torque gun calibration problem.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Not Started', active: false, dot: '#e84444', main: 'No ActionPlan created yet', sub: '7 days since SnapShot — needs attention', note: null, urgent: true },
+      { stage: 'ReShot', label: 'ReShot', active: false, dot: '#b0b8c4', main: 'Awaiting ActionPlan', sub: 'Not yet scheduled', note: null, pending: true },
+      { stage: 'Closed', label: 'Loop Closed', active: false, dot: '#b0b8c4', main: 'Awaiting ActionPlan', sub: 'Not yet completed', note: null, pending: true }
+    ],
+    primaryBtn: 'Start ActionPlan', secondaryBtn: 'View Slides'
+  },
+  'ANT-010-003': {
+    id: 'ANT-010-003', title: 'Missing safety signage in dispatch area',
+    summary: 'Required PPE and forklift warning signs missing from three locations in dispatch. Flagged during internal safety walk. Compliance risk if not resolved before next audit.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'Emma Clarke raised the problem', sub: '12 Apr 2026 · 09:05am', note: 'PPE signage missing at dispatch bays 2, 4 and 6. Forklift crossing signs also absent near loading door. Identified during weekly safety walk.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Completed', active: true, dot: '#4a9b7f', main: 'Sarah Johnson completed ActionPlan ANT-010-003-AP1', sub: '15 Apr 2026 · 11:30am', note: 'Actions completed: New signage ordered and fitted at all 3 dispatch bays. Forklift crossing signs installed at loading door. Safety walk sign-off obtained.' },
+      { stage: 'ReShot', label: 'ReShot Completed', active: true, dot: '#4a9b7f', main: 'Sarah Johnson completed ReShot ANT-010-003-RS1', sub: '8 Jun 2026 · 03:45pm', note: 'All signage confirmed in place and undamaged. No further issues. Loop closed.' },
+      { stage: 'Closed', label: 'Loop Closed \u2713', active: true, dot: '#4a9b7f', main: 'Problem resolved and verified', sub: '8 Jun 2026', note: null }
+    ],
+    primaryBtn: 'View Slides', secondaryBtn: null
+  },
+  'ANT-010-004': {
+    id: 'ANT-010-004', title: 'Packing station layout causing bottleneck',
+    summary: 'Current packing station layout forcing operatives to cross paths, slowing output by an estimated 18% during peak hours.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'James Mills raised the problem', sub: '28 Apr 2026 · 01:10pm', note: 'Packing station layout means ops are crossing over each other constantly during peak. Estimated 18% slower than it should be.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Active', active: true, dot: '#f0a500', main: 'Sarah Johnson created ActionPlan ANT-010-004-AP1', sub: '30 Apr 2026 · 09:00am', note: 'Actions: 1. Map current vs proposed layout. 2. Trial new arrangement on night shift. 3. Measure output improvement over 5 shifts.' },
+      { stage: 'ReShot', label: 'ReShot Due', active: false, dot: '#5b8dee', main: 'Review scheduled', sub: '30 May 2026 · Coming up', note: null, pending: true },
+      { stage: 'Closed', label: 'Loop Closed', active: false, dot: '#b0b8c4', main: 'Awaiting ReShot', sub: 'Not yet completed', note: null, pending: true }
+    ],
+    primaryBtn: 'View ActionPlan', secondaryBtn: 'View Slides'
+  },
+  'ANT-010-005': {
+    id: 'ANT-010-005', title: 'Forklift bay floor markings faded',
+    summary: 'Safety floor markings in forklift bay have faded significantly, making pedestrian exclusion zones unclear. Risk of near-miss or incident if not repainted before next operational review.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'Aidan Soulsby raised the problem', sub: '2 May 2026 · 07:55am', note: 'Floor markings in forklift bay are barely visible — especially the pedestrian exclusion zones. Already had one near-miss last week.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Not Started', active: false, dot: '#e84444', main: 'No ActionPlan created yet', sub: '10 days since SnapShot — needs attention', note: null, urgent: true },
+      { stage: 'ReShot', label: 'ReShot', active: false, dot: '#b0b8c4', main: 'Awaiting ActionPlan', sub: 'Not yet scheduled', note: null, pending: true },
+      { stage: 'Closed', label: 'Loop Closed', active: false, dot: '#b0b8c4', main: 'Awaiting ActionPlan', sub: 'Not yet completed', note: null, pending: true }
+    ],
+    primaryBtn: 'Start ActionPlan', secondaryBtn: 'View Slides'
+  }
+};
+
+const titleToId = {
+  'Bolts snapping on line 3': 'ANT-010-002',
+  'Bolts snapping during tightening on line 3': 'ANT-010-002',
+  'Forklift bay markings faded': 'ANT-010-005',
+  'Forklift bay floor markings faded': 'ANT-010-005',
+  'Scanner signal loss at hitch rack': 'ANT-010-001',
+  'Scanner signal loss at hitch rack area': 'ANT-010-001',
+  'Packing station layout bottleneck': 'ANT-010-004',
+  'Packing station layout causing bottleneck': 'ANT-010-004',
+  'Missing safety signage in dispatch area': 'ANT-010-003',
+  'Dispatch signage check': 'ANT-010-003',
+  'Scanner signal loss \u2014 Review': 'ANT-010-001',
+  'Packing station layout review': 'ANT-010-004',
+};
+
+function openTimeline(problemId) {
+  const data = timelineData[problemId];
+  if (!data) return;
+  document.getElementById('timelineId').textContent = data.id;
+  document.getElementById('timelineTitleText').textContent = data.title;
+  let html = `<div class="problem-summary">${data.summary}</div><div class="timeline-track">`;
+  data.steps.forEach((step, i) => {
+    const pendingClass = step.pending ? ' pending' : '';
+    const labelClass = step.active && !step.pending ? ' active' : '';
+    html += `
+      <div class="timeline-step${pendingClass}" style="animation-delay:${i*0.07}s">
+        <div class="timeline-step-dot${step.active && !step.pending ? ' active' : ''}" style="background:${step.dot}"></div>
+        <div class="timeline-step-label${labelClass}">${step.stage}</div>
+        <div class="timeline-step-main">${step.main}</div>
+        <div class="timeline-step-sub">${step.sub}</div>
+        ${step.note ? `<div class="timeline-step-note">${step.note}</div>` : ''}
+      </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('timelineBody').innerHTML = html;
+  let actHtml = `<button class="tl-btn-primary">${data.primaryBtn}</button>`;
+  if (data.secondaryBtn) actHtml += `<button class="tl-btn-secondary">${data.secondaryBtn}</button>`;
+  document.getElementById('timelineActions').innerHTML = actHtml;
+  document.getElementById('timelinePopup').classList.add('visible');
+}
+
+function closeTimeline() {
+  document.getElementById('timelinePopup').classList.remove('visible');
+}
+
+document.getElementById('timelineBack').addEventListener('click', closeTimeline);
+
+document.addEventListener('click', e => {
+  const rowTitle = e.target.closest('.row-title');
+  if (!rowTitle) return;
+  const titleText = rowTitle.textContent.trim();
+
+  // First try hardcoded timeline data
+  const hardcodedId = titleToId[titleText];
+  if (hardcodedId && timelineData[hardcodedId]) {
+    e.stopPropagation();
+    openTimeline(hardcodedId);
+    return;
+  }
+
+  // Then try live popup data — find matching snapshot by title
+  const match = popupData.snapshot.find(r => r.title === titleText)
+    || popupData.actionplan.find(r => r.title === titleText)
+    || popupData.reshot.find(r => r.title === titleText);
+  if (match) {
+    e.stopPropagation();
+    openLiveTimeline(match);
+  }
+});
+
+function openLiveTimeline(row) {
+  // Find the base snapshot record
+  const snap = popupData.snapshot.find(r => r.title === row.title) || row;
+  document.getElementById('timelineId').textContent = snap.id;
+  document.getElementById('timelineTitleText').textContent = snap.title;
+
+  const ap = popupData.actionplan.find(a => a.title === snap.title);
+  const rs = popupData.reshot.find(r => r.title === snap.title);
+
+  let html = `<div class="problem-summary">Raised by ${snap.by} on ${snap.date}.</div><div class="timeline-track">`;
+
+  html += `
+    <div class="timeline-step" style="animation-delay:0s">
+      <div class="timeline-step-dot active" style="background:#4a9b7f"></div>
+      <div class="timeline-step-label active">SnapShot</div>
+      <div class="timeline-step-main">${snap.by} raised the problem</div>
+      <div class="timeline-step-sub">${snap.date}</div>
+    </div>`;
+
+  if (ap) {
+    html += `
+      <div class="timeline-step" style="animation-delay:0.07s">
+        <div class="timeline-step-dot active" style="background:#f0a500"></div>
+        <div class="timeline-step-label active">ActionPlan</div>
+        <div class="timeline-step-main">${ap.by} created ${ap.id}</div>
+        <div class="timeline-step-sub">${ap.date} · ${ap.status}</div>
+      </div>`;
+  } else {
+    html += `
+      <div class="timeline-step" style="animation-delay:0.07s">
+        <div class="timeline-step-dot" style="background:#e84444"></div>
+        <div class="timeline-step-label">ActionPlan</div>
+        <div class="timeline-step-main">No ActionPlan created yet</div>
+        <div class="timeline-step-sub">Needs attention</div>
+      </div>`;
+  }
+
+  if (rs) {
+    const solved = rs.status === 'Loop Closed';
+    html += `
+      <div class="timeline-step" style="animation-delay:0.14s">
+        <div class="timeline-step-dot${solved ? ' active' : ''}" style="background:${solved ? '#4a9b7f' : '#5b8dee'}"></div>
+        <div class="timeline-step-label${solved ? ' active' : ''}">ReShot</div>
+        <div class="timeline-step-main">${rs.by} · ${rs.id}</div>
+        <div class="timeline-step-sub">${rs.date}</div>
+      </div>`;
+  } else {
+    html += `
+      <div class="timeline-step pending" style="animation-delay:0.14s">
+        <div class="timeline-step-dot" style="background:#b0b8c4"></div>
+        <div class="timeline-step-label">ReShot</div>
+        <div class="timeline-step-main">Not yet scheduled</div>
+        <div class="timeline-step-sub">Awaiting ActionPlan completion</div>
+      </div>`;
+  }
+
+  const isClosed = rs && rs.status === 'Loop Closed';
+  html += `
+    <div class="timeline-step${isClosed ? '' : ' pending'}" style="animation-delay:0.21s">
+      <div class="timeline-step-dot${isClosed ? ' active' : ''}" style="background:${isClosed ? '#4a9b7f' : '#b0b8c4'}"></div>
+      <div class="timeline-step-label${isClosed ? ' active' : ''}">Closed</div>
+      <div class="timeline-step-main">${isClosed ? 'Loop closed and verified' : 'Awaiting ReShot'}</div>
+      <div class="timeline-step-sub">${isClosed ? rs.date : 'Not yet completed'}</div>
+    </div>`;
+
+  html += `</div>`;
+  document.getElementById('timelineBody').innerHTML = html;
+
+  let btn = 'View Slides';
+  if (!ap) btn = 'Start ActionPlan';
+  else if (!rs) btn = 'Start ReShot';
+  document.getElementById('timelineActions').innerHTML = `<button class="tl-btn-primary">${btn}</button>`;
+  document.getElementById('timelinePopup').classList.add('visible');
+}
+
+// ── GAFFA ──
+function toggleGaffa() {
+  document.getElementById('gaffaPanel').classList.toggle('visible');
+}
+document.getElementById('gaffaInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') e.target.value = '';
+});
+
+</script>
+<!-- GAFFA BUTTON -->
+<button class="gaffa-btn" onclick="toggleGaffa()">
+  <div class="gaffa-btn-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4.5 6.5V17a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+  </div>
+  <div class="gaffa-btn-text">
+    <span class="gaffa-btn-label">The Gaffa.</span>
+    <span class="gaffa-btn-sub">Need help implementing an action?</span>
+  </div>
+</button>
+
+</body>
+</html>
