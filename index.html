@@ -604,7 +604,7 @@ async function extractAndSendJSON(replyText) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1000,
         system: 'You are a data extraction assistant. Based on the conversation provided, generate ONLY a valid JSON object with these exact fields: problem_title, created_by, current_state, ishikawa_factors, waste_factors, why_this_matters, anttro_insight. STRICT RULES: current_state max 350 chars, 3 facts only, no waffle, finish cleanly. ishikawa_factors and waste_factors: EACH FACTOR ON ITS OWN LINE, format EXACTLY "- Category - 3 to 4 words", HARD MAX 45 chars per line, NO sentences, NO wrapping. why_this_matters max 450 chars, use the full allowance, explain business impact clearly, finish cleanly never mid-sentence. anttro_insight max 450 chars, use the full allowance, projected impact specific to this problem, finish cleanly never mid-sentence. Use actual newline characters to separate each factor. Return only the JSON object, nothing else. No markdown, no backticks.',
         messages: [...conversationHistory, { role: 'user', content: 'Generate the JSON output for this conversation now.' }]
@@ -661,7 +661,7 @@ async function sendToAPI() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1000,
         system: SYSTEM_PROMPT,
         messages: conversationHistory
