@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ActionPlan — Anttro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:"Barlow",sans-serif; background:#1e2330; margin:0; padding:0; }
+.ctrl-bar { position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(15,15,15,0.94); backdrop-filter:blur(14px); padding:10px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.08); }
+.ctrl-title { font-size:13px; font-weight:600; color:rgba(255,255,255,0.6); letter-spacing:0.4px; }
+.ctrl-btns { display:flex; gap:10px; }
+.ctrl-btn { padding:8px 20px; border-radius:8px; font-size:13px; font-weight:700; font-family:"Barlow",sans-serif; cursor:pointer; border:none; transition:all 0.18s; }
+.ctrl-pri { background:#7ec8b0; color:#111; }
+.ctrl-pri:hover { background:#5aaa92; }
+.ctrl-sec { background:rgba(255,255,255,0.09); color:rgba(255,255,255,0.75); border:1px solid rgba(255,255,255,0.12); }
+.ctrl-sec:hover { background:rgba(255,255,255,0.14); }
+.slides-page { padding:60px 0 32px; display:flex; flex-direction:column; gap:0; align-items:center; }
+.slide-outer { width:100%; padding-bottom:56.25%; position:relative; margin-bottom:16px; }
+.slide-inner { position:absolute; top:0; left:0; width:1280px; height:720px; transform-origin:top left; }
+.sld { width:1280px; height:720px; position:relative; overflow:hidden; border-radius:6px; font-family:"Barlow",sans-serif; box-shadow:0 8px 40px rgba(0,0,0,0.5); }
+
+/* DARK BASE */
+.sld-bg { position:absolute; inset:0; background:#2c3440; }
+
+/* BLOBS - cover */
+.blob-cover-tl { position:absolute; width:500px; height:500px; top:-100px; left:-80px; background:radial-gradient(ellipse at 40% 40%, rgba(60,80,130,0.9) 0%, rgba(50,70,120,0.6) 40%, transparent 70%); filter:blur(60px); border-radius:50%; }
+.blob-cover-br { position:absolute; width:400px; height:350px; bottom:-60px; left:180px; background:radial-gradient(ellipse at 50% 60%, rgba(80,60,100,0.7) 0%, rgba(100,80,60,0.4) 50%, transparent 72%); filter:blur(55px); border-radius:50%; }
+.blob-cover-cr { position:absolute; width:600px; height:500px; top:80px; right:-100px; background:radial-gradient(ellipse at 50% 45%, rgba(50,80,140,0.75) 0%, rgba(60,100,160,0.5) 40%, transparent 70%); filter:blur(70px); border-radius:50%; }
+
+/* BLOBS - action */
+.blob-act-cr { position:absolute; width:580px; height:520px; top:60px; right:-60px; background:radial-gradient(ellipse at 48% 42%, rgba(80,110,160,0.7) 0%, rgba(100,130,180,0.45) 40%, rgba(120,160,190,0.25) 65%, transparent 80%); filter:blur(65px); border-radius:50%; }
+.blob-act-bl { position:absolute; width:320px; height:280px; bottom:-40px; left:300px; background:radial-gradient(ellipse at 50% 55%, rgba(60,50,90,0.6) 0%, rgba(80,70,60,0.3) 45%, transparent 70%); filter:blur(50px); border-radius:50%; }
+
+/* COVER SLIDE */
+.s1-anttro { position:absolute; top:14px; right:52px; font-size:42px; font-weight:900; color:#fff; letter-spacing:-0.5px; }
+.s1-topline { position:absolute; top:88px; left:52px; right:52px; height:1px; background:rgba(255,255,255,0.2); }
+.s1-title { position:absolute; top:160px; left:48px; font-size:210px; font-weight:900; color:#fff; line-height:1; letter-spacing:-8px; white-space:nowrap; }
+.s1-problem { position:absolute; top:18px; left:52px; right:200px; font-size:38px; font-weight:700; color:#fff; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.s1-review { position:absolute; bottom:185px; right:140px; font-size:48px; font-weight:700; color:#fff; }
+.s1-review::before { content:"•"; margin-right:14px; opacity:0.6; }
+.s1-botline { position:absolute; bottom:82px; left:52px; right:52px; height:1px; background:rgba(255,255,255,0.2); }
+.s1-created { position:absolute; bottom:18px; left:52px; font-size:28px; font-weight:700; color:#fff; }
+.s1-created span { font-weight:400; margin-left:14px; color:#fff; }
+
+/* ACTION SLIDE */
+.sa-wrap { position:absolute; inset:0; padding:28px 48px 48px; display:flex; flex-direction:column; }
+.sa-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:0; }
+.sa-title { font-size:96px; font-weight:900; color:#fff; line-height:1; letter-spacing:-3px; }
+.sa-owner-block { display:flex; align-items:center; gap:14px; }
+.sa-owner-label { font-size:32px; font-weight:700; color:#fff; }
+.sa-owner-name { font-size:32px; font-weight:400; color:#fff; }
+.sa-rule { width:100%; height:1px; background:rgba(255,255,255,0.2); margin:10px 0 20px; }
+.sa-body { flex:1; display:flex; gap:40px; min-height:0; }
+
+/* Left */
+.sa-left { flex:1; display:flex; flex-direction:column; gap:20px; min-height:0; }
+.sa-desc { font-size:40px; font-weight:600; color:#fff; line-height:1.5; padding-left:32px; position:relative; margin-top:24px; }
+.sa-desc::before { content:"\2022"; position:absolute; left:0; color:rgba(255,255,255,0.5); }
+.sa-purpose-box { position:absolute; bottom:110px; left:48px; width:680px; background:rgba(160,130,160,0.45); border:1.5px solid rgba(255,255,255,0.25); border-radius:16px; padding:28px 36px; display:flex; flex-direction:column; gap:10px; }
+.sa-purpose-label { font-size:32px; font-weight:700; color:#fff; }
+.sa-purpose-text { font-size:28px; font-weight:400; color:#fff; line-height:1.5; }
+
+/* Right - circles */
+.sa-right { width:420px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; flex-shrink:0; }
+.sa-circle-top { display:flex; justify-content:center; }
+.sa-circle-bottom { display:flex; gap:16px; justify-content:center; }
+.sa-circle { border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+/* Impact - large, light grey/white */
+.sa-circle-impact { width:240px; height:240px; background:radial-gradient(ellipse at 38% 32%, rgba(230,235,242,0.95) 0%, rgba(205,215,228,0.88) 45%, rgba(185,198,215,0.78) 80%); border:2px solid rgba(255,255,255,0.8); box-shadow:0 6px 30px rgba(0,0,0,0.2); }
+
+/* Effort - medium, light blue */
+.sa-circle-effort { width:240px; height:240px; background:radial-gradient(ellipse at 38% 32%, rgba(185,215,245,0.92) 0%, rgba(160,200,238,0.83) 45%, rgba(140,185,228,0.72) 80%); border:2px solid rgba(255,255,255,0.65); box-shadow:0 6px 24px rgba(0,0,0,0.18); }
+
+/* Due Date - medium, dark grey */
+.sa-circle-due { width:240px; height:240px; background:radial-gradient(ellipse at 38% 32%, rgba(110,118,138,0.9) 0%, rgba(88,96,115,0.82) 45%, rgba(72,80,98,0.75) 80%); border:2px solid rgba(255,255,255,0.2); box-shadow:0 6px 24px rgba(0,0,0,0.25); }
+
+.sa-circle-label { font-size:26px; font-weight:700; color:#3a3e44; line-height:1; margin-bottom:4px; text-align:center; }
+.sa-circle-impact .sa-circle-label,
+.sa-circle-effort .sa-circle-label { color:#3a3e44; }
+.sa-circle-due .sa-circle-label { color:rgba(255,255,255,0.8); }
+.sa-circle-num { font-size:96px; font-weight:900; color:#3a3e44; line-height:1; letter-spacing:-2px; }
+.sa-circle-due .sa-circle-num { color:#fff; }
+.sa-circle-date-day { font-size:80px; font-weight:900; color:#fff; line-height:1; letter-spacing:-1px; }
+.sa-circle-date-mon { font-size:32px; font-weight:700; color:rgba(255,255,255,0.75); }
+
+.sa-powered { position:absolute; bottom:14px; right:22px; display:flex; align-items:center; gap:6px; font-size:16px; font-weight:400; color:rgba(255,255,255,0.5); letter-spacing:2.5px; text-transform:uppercase; }
+.sa-powered b { font-weight:900; font-size:22px; letter-spacing:-0.5px; text-transform:none; color:rgba(255,255,255,0.8); }
+
+@media print {
+  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  @page { size:1280px 720px; margin:0; }
+  body { margin:0 !important; padding:0 !important; width:1280px; overflow:hidden; }
+  .ctrl-bar { display:none !important; }
+  .slides-page { padding:0 !important; display:block !important; }
+  .slide-outer { width:1280px !important; padding-bottom:0 !important; height:720px !important; margin:0 !important; page-break-after:always !important; }
+  .slide-inner { position:relative !important; transform:none !important; width:1280px !important; height:720px !important; }
+  .sld { border-radius:0 !important; box-shadow:none !important; width:1280px !important; height:720px !important; }
+  .slide-outer:last-child { page-break-after:avoid !important; }
+}
+</style>
+</head>
+<body>
+<div class="ctrl-bar">
+  <span class="ctrl-title">ActionPlan Preview</span>
+  <div class="ctrl-btns">
+    <button class="ctrl-btn ctrl-sec" onclick="window.close()">&#8592; Back</button>
+    <button class="ctrl-btn ctrl-pri" onclick="printSlides()">&#8595; Download PDF</button>
+  </div>
+</div>
+<div class="slides-page" id="slidesPage"></div>
+<script>
+function trunc(s,m){if(!s)return"";s=String(s);if(s.length<=m)return s;var cut=s.slice(0,m);var lp=cut.lastIndexOf(".");var ls=cut.lastIndexOf(" ");if(lp>m*0.6)return cut.slice(0,lp+1);if(ls>m*0.6)return cut.slice(0,ls);return cut;}
+function fdate(d){if(!d)return{day:"",mon:""};var p=d.split("/");if(p.length!==3)return{day:d,mon:""};var m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return{day:parseInt(p[0]),mon:m[parseInt(p[1])-1]};}
+
+function buildSlides(data){
+  var page=document.getElementById("slidesPage");
+  page.innerHTML="";
+
+  // COVER
+  var c=document.createElement("div");
+  c.className="slide-outer";
+  c.innerHTML="<div class=\"slide-inner\"><div class=\"sld\"><div class=\"sld-bg\"></div><div class=\"sld-blob blob-cover-tl\"></div><div class=\"sld-blob blob-cover-br\"></div><div class=\"sld-blob blob-cover-cr\"></div><div class=\"s1-problem\">"+trunc(data.problem_title,60)+"</div><div class=\"s1-anttro\">Anttro.</div><div class=\"s1-topline\"></div><div class=\"s1-title\">ActionPlan.</div><div class=\"s1-botline\"></div><div class=\"s1-created\">Created by : <span>"+trunc(data.created_by,30)+"</span></div><div class=\"s1-review\">Review Date : "+trunc(data.review_date||"",20)+"</div></div></div>";
+  page.appendChild(c);
+
+  // ACTIONS
+  (data.actions||[]).forEach(function(a,i){
+    var dt=fdate(a.due_date);
+    var o=document.createElement("div");
+    o.className="slide-outer";
+    o.innerHTML="<div class=\"slide-inner\"><div class=\"sld\"><div class=\"sld-bg\"></div><div class=\"sld-blob blob-act-cr\"></div><div class=\"sld-blob blob-act-bl\"></div>"
+      +"<div class=\"sa-wrap\">"
+        +"<div class=\"sa-top\"><div class=\"sa-title\">Action "+(i+1)+".</div><div class=\"sa-owner-block\"><div class=\"sa-owner-label\">Owner</div><div class=\"sa-owner-sep\" style=\"font-size:32px;color:rgba(255,255,255,0.4);\">–</div><div class=\"sa-owner-name\">"+trunc(a.owner,30)+"</div></div></div>"
+        +"<div class=\"sa-rule\"></div>"
+        +"<div class=\"sa-body\">"
+          +"<div class=\"sa-left\"><div class=\"sa-desc\">"+trunc(a.description,80)+"</div><div class=\"sa-purpose-box\"><div class=\"sa-purpose-label\">Purpose</div><div class=\"sa-purpose-text\">"+trunc(a.purpose,150)+"</div></div></div>"
+          +"<div class=\"sa-right\">"
+            +"<div class=\"sa-circle-top\"><div class=\"sa-circle sa-circle-impact\"><div class=\"sa-circle-label\">Impact Score</div><div class=\"sa-circle-num\">"+(a.impact_score||"")+"</div></div></div>"
+            +"<div class=\"sa-circle-bottom\"><div class=\"sa-circle sa-circle-effort\"><div class=\"sa-circle-label\">Effort Score</div><div class=\"sa-circle-num\">"+(a.effort_score||"")+"</div></div>"
+            +"<div class=\"sa-circle sa-circle-due\"><div class=\"sa-circle-label\" style=\"color:rgba(255,255,255,0.75)\">Due Date</div><div class=\"sa-circle-date-day\">"+dt.day+"</div><div class=\"sa-circle-date-mon\">"+dt.mon+"</div></div></div>"
+          +"</div>"
+        +"</div>"
+      +"</div>"
+      +"<div class=\"sa-powered\">POWERED BY <b>Anttro.</b></div>"
+      +"</div></div>";
+    page.appendChild(o);
+  });
+  scaleSlides();
+}
+
+function scaleSlides(){document.querySelectorAll(".slide-outer").forEach(function(o){var inner=o.querySelector(".slide-inner");if(inner)inner.style.transform="scale("+(o.offsetWidth/1280)+")";});}
+window.addEventListener("resize",scaleSlides);
+function printSlides(){var s=document.createElement("style");s.textContent="@page{size:1280px 720px;margin:0;}body{margin:0;padding:0;}";document.head.appendChild(s);setTimeout(function(){window.print();},100);}
+
+var data=null;
+try{var raw=sessionStorage.getItem("anttro_actionplan");if(raw)data=JSON.parse(raw);}catch(e){}
+if(!data)data={problem_title:"Scanner signal loss at hitch rack area",created_by:"Sarah Johnson",review_date:"07/06/2026",actions:[{action_number:1,description:"Map signal dead spots across the hitch rack area",purpose:"Pinpoint exactly where the signal drops so we have something concrete to take to whoever looks at the fix.",owner:"IT Team",effort_score:2,impact_score:4,due_date:"20/05/2026"},{action_number:2,description:"Swap the scanner with one from a different area and monitor for 48 hours",purpose:"Determine if the issue follows the device or stays in the location.",owner:"Warehouse Supervisor",effort_score:1,impact_score:4,due_date:"22/05/2026"},{action_number:3,description:"Check for any recent changes in or around the hitch rack area",purpose:"New racking or moved equipment could be interfering with the signal.",owner:"Aidan Soulsby",effort_score:1,impact_score:3,due_date:"18/05/2026"}]};
+buildSlides(data);
+</script>
+</body>
+</html>
