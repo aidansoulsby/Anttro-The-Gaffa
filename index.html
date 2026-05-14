@@ -614,6 +614,7 @@ async function extractAndSendJSON(replyText) {
     const jsonText = jsonData.content[0].text;
     // Normalise encoding issues before parsing
     const cleanedJson = jsonText
+      .replace(/```json|```/g, '')
       .replace(/â/g, '—')
       .replace(/â€"/g, '—')
       .replace(/â/g, '—');
