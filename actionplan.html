@@ -953,7 +953,7 @@ async function sendToAPI() {
       document.getElementById('userInput').disabled = true;
       document.getElementById('sendBtn').disabled = true;
       addMessage('bot', 'Sorted. 👊');
-      extractAndSendJSON(reply);
+      await extractAndSendJSON(reply);
     }
 
   } catch(err) {
