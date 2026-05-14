@@ -834,7 +834,7 @@ async function extractAndSendJSON(replyText) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1500,
         system: 'You are a data extraction assistant. Based on the conversation provided, generate ONLY a valid JSON object with these exact fields: snapshot_id, team_id, problem_title, created_by, working_hypothesis, review_date (DD/MM/YYYY), overall_effort_score (number), overall_impact_score (number), status, actions (array of objects each with: action_number, description, purpose, owner, effort_score, impact_score, due_date DD/MM/YYYY, status). Return only the JSON object, nothing else. No markdown, no backticks.',
         messages: [...conversationHistory, { role: 'user', content: 'Generate the JSON output for this ActionPlan conversation now.' }]
