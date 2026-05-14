@@ -374,9 +374,9 @@ async function startConversation(context) {
 
   let opening;
   if (context) {
-    opening = `Hi ${context.managerName}.\n\nAidan raised this. Scanner dropping signal every 15-20 minutes at the hitch rack. Causing wrong picks and double handling.\n\nDo you have any idea what's behind it?`;
+opening = `Hi ${context.managerName}.\n\n${context.problemTitle}. ${context.currentState}\n\nDo you have any idea what's behind it?`;
   } else {
-    opening = "Right, let's build this ActionPlan. What problem are we working on?";
+    opening = "Hi. What problem are we working on today?";
   }
 
   const contextMessage = context
