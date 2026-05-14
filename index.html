@@ -568,7 +568,7 @@ function showSlidePreview() {
       if (window.currentSnapshotData) {
         sessionStorage.setItem('anttro_snapshot', JSON.stringify(window.currentSnapshotData));
       }
-      window.open('/snapshot-slides.html', '_blank');
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(window.currentSnapshotData)))); window.open('/snapshot-slides.html?data=' + encoded, '_blank');
     } catch(e) {
       previewBtn.textContent = 'Could not open — try again';
       setTimeout(() => { previewBtn.textContent = '👁️ Preview & Download SnapShot'; }, 3000);
