@@ -865,7 +865,7 @@ async function extractAndSendJSON(replyText) {
       }));
     }
 
-    window.currentActionPlanData = parsed;
+    window.currentActionPlanData = parsed;     sessionStorage.setItem('anttro_actionplan', JSON.stringify(parsed));
   } catch(err) {
     console.error('JSON extraction error:', err);
   }
