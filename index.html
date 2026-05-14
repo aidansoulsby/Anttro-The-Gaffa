@@ -620,6 +620,7 @@ async function extractAndSendJSON(replyText) {
     const teamId = new URLSearchParams(window.location.search).get('team') || 'ANT-000';
     const parsed = JSON.parse(cleanedJson);
     window.currentSnapshotData = parsed;
+    sessionStorage.setItem('anttro_snapshot', JSON.stringify(parsed));
     // Generate snapshot URL with base64 encoded data for Sheets link
     try {
       const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(parsed))));
