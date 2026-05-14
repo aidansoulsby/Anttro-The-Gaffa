@@ -631,7 +631,7 @@ async function extractAndSendJSON(replyText) {
       const makeResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'send_to_make', data: { ...parsed, team_id: teamId } })
+        body: JSON.stringify({ action: 'send_to_make', data: { ...parsed, team_id: teamId, type: 'snapshot' } })
       });
       if (makeResponse.ok) {
         try {
