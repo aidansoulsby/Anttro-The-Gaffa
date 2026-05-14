@@ -696,7 +696,7 @@ async function sendToAPI() {
       window.slidesShown = true;
       document.getElementById('userInput').disabled = true;
       document.getElementById('sendBtn').disabled = true;
-      extractAndSendJSON(reply);
+      await extractAndSendJSON(reply);
       showFeedbackAndLoading();
     }
   } catch(err) {
