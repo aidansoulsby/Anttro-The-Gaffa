@@ -331,7 +331,7 @@ module.exports = async (req, res) => {
         actionplans: actionplanRows,
         reshots: reshotRows,
       },
-      actions: actionsData.filter(a => !teamId || a['Team ID'] === teamId),
+      actions: teamId ? actions.filter(r => r['Team ID'] === teamId) : actions,
       newSnapshots: snapshotRows.filter(r => r.status === 'SnapShot Complete'),
       needsAttention,
       comingUp,
