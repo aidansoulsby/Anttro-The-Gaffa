@@ -160,6 +160,8 @@ module.exports = async (req, res) => {
         currentState: r['Current State'] || '',
         ishikawa: r['Ishikawa Factors'] || '',
         waste: r['Waste Factors'] || '',
+        whyThisMatters: r['Why This Matters'] || '',
+        anttroInsight: r['Anttro Insight'] || '',
       };
     });
 
