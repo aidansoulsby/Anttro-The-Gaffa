@@ -1,0 +1,3198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anttro Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #2c3440;
+  --border: rgba(255,255,255,0.1);
+  --border-hover: rgba(255,255,255,0.2);
+  --accent: #7ec8b0;
+  --accent-dim: #5aaa92;
+  --text: #f0f2f4;
+  --text-dim: #a8b4bc;
+  --text-muted: #6a7a84;
+  --user-bubble: rgba(126,200,176,0.12);
+  --user-border: rgba(126,200,176,0.25);
+  --bot-bubble: rgba(255,255,255,0.05);
+  --bot-border: rgba(255,255,255,0.08);
+}
+html, body {
+  height:100%; font-family:'Barlow',sans-serif;
+  background:#cdd5e0;
+}
+body::after {
+  content:''; position:fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size:200px; pointer-events:none; z-index:0; opacity:0.5; mix-blend-mode:multiply;
+}
+
+/* ── LOADING BAR ── */
+.loading-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, #4a9b7f, #7dd4b8, #4a9b7f);
+  background-size: 200% 100%;
+  z-index: 9999;
+  border-radius: 0 2px 2px 0;
+  animation: loadingShimmer 1.2s linear infinite;
+  transition: width 0.3s ease, opacity 0.4s ease;
+  opacity: 1;
+}
+@keyframes loadingShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── LAYOUT ── */
+html, body { display:flex; flex-direction:column; overflow:hidden; }
+
+.row { display:flex; align-items:center; justify-content:center; gap:0; position:relative; z-index:1; padding:0 50px 20px 20px; }
+
+/* ── CONNECTOR ── */
+.connector {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 140px;
+  margin-top: 72px;
+}
+.connector-line {
+  flex: 1;
+  height: 4px;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.85) 2px, transparent 2px);
+  background-size: 12px 4px;
+  background-repeat: repeat-x;
+}
+.flow-bubble {
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  background: #e84444;
+  border: 4px solid #cdd5e0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(232,68,68,0.55);
+  animation: bpulse 2.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.fb-label {
+  font-size: 9px; font-weight: 800;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: 0.2px; line-height: 1.3;
+  text-align: center;
+}
+.fb-num {
+  font-size: 26px; font-weight: 900;
+  color: #fff; line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+/* ── NEW SUBMISSIONS BUBBLE ── */
+.new-bubble {
+  position: absolute;
+  top: 65px; left: 18px;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #4a9b7f;
+  border: 3px solid #cdd5e0;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(74,155,127,0.55);
+  z-index: 10;
+  cursor: pointer;
+  animation: greenpulse 2.2s ease-in-out infinite;
+  transition: transform 0.15s;
+}
+.new-bubble:hover { transform: scale(1.1); }
+.new-bubble span {
+  font-size: 13px; font-weight: 900;
+  color: #fff; line-height: 1;
+}
+@keyframes greenpulse {
+  0%,100% { box-shadow: 0 4px 14px rgba(74,155,127,0.55), 0 0 0 0 rgba(74,155,127,0.35); }
+  50% { box-shadow: 0 4px 14px rgba(74,155,127,0.65), 0 0 0 8px rgba(74,155,127,0); }
+}
+
+.node { display:flex; flex-direction:column; align-items:flex-start; outline:none; }
+.node:focus { outline:none; }
+
+.node-title {
+  font-size:58px; font-weight:900; color:#fff;
+  letter-spacing:-1px; margin-bottom:-8px;
+  line-height:1;
+  text-shadow:0 2px 10px rgba(0,0,0,0.1);
+  width:270px;
+}
+.node-title-right { text-align:right; overflow:visible; }
+.node-title-snapshot { text-align:right; overflow:visible; }
+.node-title-center { text-align:center; overflow:visible; margin-left:-30px; }
+
+.shape-wrap { position:relative; width:270px; height:297px; filter:drop-shadow(0 16px 40px rgba(0,0,0,0.4)) drop-shadow(0 4px 12px rgba(0,0,0,0.25)); transition:filter 0.25s; }
+.shape-wrap:hover { filter:drop-shadow(0 24px 55px rgba(0,0,0,0.55)) drop-shadow(0 6px 18px rgba(0,0,0,0.35)); }
+.shape-svg { width:270px; height:297px; display:block; filter:none; }
+
+.shape-num {
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%, -50%);
+  font-size:155px; font-weight:900;
+  color:rgba(255,255,255,0.95); line-height:1; letter-spacing:-5px;
+  text-shadow:0 3px 18px rgba(0,0,0,0.15);
+  pointer-events:none;
+  z-index:2;
+}
+
+@keyframes bpulse {
+  0%,100% { box-shadow:0 4px 18px rgba(232,68,68,0.55),0 0 0 0 rgba(232,68,68,0.35); }
+  50% { box-shadow:0 4px 18px rgba(232,68,68,0.65),0 0 0 10px rgba(232,68,68,0); }
+}
+
+.shapes-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+}
+
+/* ── STAT BAR ── */
+.stat-bar {
+  width: auto;
+  align-self: center;
+  flex-shrink: 0;
+  background: #2a3050;
+  padding: 8px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  border-radius: 50px;
+  box-shadow: 0 4px 24px rgba(30,36,64,0.22);
+  margin: 8px auto 0;
+  position: relative;
+  z-index: 1;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 36px;
+  position: relative;
+}
+.stat-item + .stat-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 1px; height: 28px;
+  background: rgba(255,255,255,0.12);
+}
+.stat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.stat-label {
+  font-size: 10px; font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  text-transform: uppercase; letter-spacing: 1px; line-height: 1;
+}
+.stat-value {
+  font-size: 22px; font-weight: 900;
+  color: #fff; letter-spacing: -0.5px; line-height: 1;
+}
+.stat-text { display: flex; flex-direction: column; gap: 3px; }
+
+/* ── CHART ── */
+.chart-container {
+  width: calc(100% - 80px);
+  align-self: center;
+  flex-shrink: 0;
+  background: #2a3050;
+  backdrop-filter: blur(20px);
+  border: none;
+  border-radius: 20px;
+  padding: 10px 28px 12px;
+  margin: 6px auto 10px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 24px rgba(30,36,64,0.22);
+}
+.chart-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.chart-title { font-size:12px; font-weight:700; color:#ffffff; opacity:1; letter-spacing:0.3px; text-transform:uppercase; }
+.toggle { display:flex; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:3px; gap:2px; }
+.toggle-btn { padding:5px 16px; border-radius:16px; font-size:12px; font-weight:700; font-family:'Barlow',sans-serif; cursor:pointer; border:none; background:transparent; color:#ffffff; opacity:0.5; transition:all 0.2s; }
+.toggle-btn.active { background:rgba(255,255,255,0.2); opacity:1; color:#ffffff; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+.chart-wrap { position:relative; height:120px; }
+.chart-svg { width:100%; height:100%; overflow:visible; }
+.tooltip { position:absolute; background:rgba(45,51,64,0.85); backdrop-filter:blur(8px); color:#fff; font-size:11px; font-weight:700; padding:5px 10px; border-radius:6px; pointer-events:none; opacity:0; transition:opacity 0.15s; transform:translateX(-50%); white-space:nowrap; z-index:10; }
+.tooltip.visible { opacity:1; }
+
+/* ── ACTION PLAN PANEL CHAT STYLES ── */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.ap-panel .message-group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 14px; }
+.ap-panel .message { display: flex; gap: 10px; align-items: flex-end; animation: fadeUp 0.25s ease forwards; opacity: 0; }
+.ap-panel .message.user { flex-direction: row-reverse; }
+.ap-panel .avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; font-family: 'Open Sans', sans-serif; }
+.ap-panel .avatar.bot { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #f0f2f4; }
+.ap-panel .avatar.user { background: rgba(126,200,176,0.12); border: 1px solid rgba(126,200,176,0.25); color: #7ec8b0; }
+.ap-panel .bubble { max-width: 80%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.65; font-weight: 400; font-family: 'Open Sans', sans-serif; }
+.ap-panel .message.bot .bubble { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-bottom-left-radius: 4px; color: #f0f2f4; backdrop-filter: blur(8px); }
+.ap-panel .message.user .bubble { background: rgba(126,200,176,0.12); border: 1px solid rgba(126,200,176,0.25); border-bottom-right-radius: 4px; color: #f0f2f4; backdrop-filter: blur(8px); }
+.ap-panel .typing { display: flex; gap: 10px; align-items: center; padding: 4px 0; animation: fadeUp 0.25s ease forwards; opacity: 0; }
+.ap-panel .typing-dots { display: flex; gap: 5px; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; border-bottom-left-radius: 4px; }
+.ap-panel .typing-dot { width: 6px; height: 6px; background: #6a7a84; border-radius: 50%; animation: typingBounce 1.2s infinite; }
+.ap-panel .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.ap-panel .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+.ap-panel .timestamp { font-size: 10px; color: #6a7a84; padding: 0 42px; margin-top: 3px; font-family: 'Open Sans', sans-serif; }
+.ap-panel .timestamp.right { text-align: right; }
+.ap-panel .score-container, .ap-panel .date-container, .ap-panel .addaction-container, .ap-panel .checkbox-container, .ap-panel .slides-container, .ap-panel .loading-container { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; border-bottom-left-radius: 4px; padding: 16px; max-width: 90%; backdrop-filter: blur(8px); font-family: 'Open Sans', sans-serif; }
+.ap-panel .score-intro, .ap-panel .date-intro, .ap-panel .addaction-intro, .ap-panel .checkbox-intro, .ap-panel .slides-header, .ap-panel .loading-text { font-size: 15px; color: #f0f2f4; line-height: 1.65; margin-bottom: 14px; }
+.ap-panel .score-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.ap-panel .score-btn { width: 52px; height: 52px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); color: #f0f2f4; font-size: 18px; font-weight: 800; cursor: pointer; font-family: 'Open Sans', sans-serif; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+.ap-panel .score-btn:hover { background: rgba(126,200,176,0.15); border-color: rgba(126,200,176,0.3); }
+.ap-panel .score-btn.selected { background: rgba(126,200,176,0.25); border-color: #7ec8b0; color: #7ec8b0; }
+.ap-panel .score-labels { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #6a7a84; }
+.ap-panel .date-input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #f0f2f4; font-size: 15px; font-family: 'Open Sans', sans-serif; outline: none; }
+.ap-panel .date-confirm, .ap-panel .checkbox-confirm { margin-top: 10px; padding: 14px 18px; background: rgba(126,200,176,0.2); border: 1px solid rgba(126,200,176,0.3) !important; border-radius: 12px; color: #7ec8b0; font-size: 15px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; transition: all 0.2s; width: 100%; min-height: 48px; }
+.ap-panel .date-confirm:disabled, .ap-panel .checkbox-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+.ap-panel .addaction-btn { display: block; width: 100%; padding: 14px 18px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; transition: all 0.2s; text-align: center; margin-bottom: 8px; min-height: 48px; border: none; }
+.ap-panel .addaction-yes { background: rgba(126,200,176,0.2); border: 1px solid rgba(126,200,176,0.3) !important; color: #7ec8b0; }
+.ap-panel .addaction-no { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1) !important; color: #a8b4bc; }
+.ap-panel .checkbox-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: background 0.15s; margin-bottom: 6px; }
+.ap-panel .checkbox-item:hover { background: rgba(255,255,255,0.06); }
+.ap-panel .checkbox-item.selected { background: rgba(126,200,176,0.12); }
+.ap-panel .checkbox-box { width: 22px; height: 22px; border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; margin-top: 1px; }
+.ap-panel .checkbox-item.selected .checkbox-box { background: #7ec8b0; border-color: #7ec8b0; }
+.ap-panel .checkbox-item.selected .checkbox-box::after { content: ''; width: 6px; height: 10px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg) translateY(-1px); display: block; }
+.ap-panel .checkbox-label { font-size: 14px; color: #a8b4bc; line-height: 1.5; }
+.ap-panel .checkbox-item.selected .checkbox-label { color: #f0f2f4; }
+.ap-panel .slides-btn { display: block; width: 100%; padding: 14px 18px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; transition: all 0.2s; text-align: center; margin-bottom: 10px; min-height: 52px; border: none; }
+.ap-panel .slides-btn-download { background: rgba(126,200,176,0.2); border: 1px solid rgba(126,200,176,0.3) !important; color: #7ec8b0; }
+.ap-panel .slides-btn-submit { background: #7ec8b0; color: #2c3440; }
+.ap-panel .loading-dots { display: flex; justify-content: center; gap: 6px; }
+.ap-panel .loading-dot { width: 8px; height: 8px; background: #7ec8b0; border-radius: 50%; animation: typingBounce 1.2s infinite; }
+.ap-panel .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.ap-panel .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+.ap-panel .error-msg { background: rgba(192,57,43,0.1); border: 1px solid rgba(192,57,43,0.25); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #e74c3c; margin: 0 0 10px; }
+
+/* ── ACTION PLAN PANEL ── */
+.ap-panel {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 50%;
+  background: #2c3440;
+  z-index: 300;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  display: flex; flex-direction: column;
+  box-shadow: -8px 0 40px rgba(0,0,0,0.3);
+  font-family: 'Open Sans', sans-serif;
+}
+.ap-panel.visible { transform: translateX(0); }
+.ap-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: rgba(44,52,64,0.95);
+  backdrop-filter: blur(16px);
+  flex-shrink: 0;
+}
+.ap-panel-title { display: flex; flex-direction: column; }
+.ap-panel-name { font-size: 15px; font-weight: 700; color: #f0f2f4; }
+.ap-panel-sub { font-size: 10px; color: #6a7a84; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 1px; }
+.ap-panel-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(255,255,255,0.08); border: none; cursor: pointer;
+  color: #a8b4bc; font-size: 16px; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.ap-panel-close:hover { background: rgba(255,255,255,0.14); }
+.ap-messages {
+  flex: 1; overflow-y: auto; padding: 20px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+  scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+}
+.ap-messages::-webkit-scrollbar { width: 3px; }
+.ap-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+.ap-input-area {
+  padding: 12px 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  background: rgba(44,52,64,0.9);
+  backdrop-filter: blur(16px);
+  flex-shrink: 0;
+}
+.ap-input-wrapper {
+  display: flex; gap: 10px; align-items: flex-end;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px; padding: 10px 10px 10px 16px;
+  transition: border-color 0.2s;
+}
+.ap-input-wrapper:focus-within { border-color: rgba(126,200,176,0.3); }
+.ap-textarea {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #f0f2f4; font-family: 'Open Sans', sans-serif;
+  font-size: 15px; line-height: 1.5; resize: none;
+  max-height: 120px; min-height: 24px;
+}
+.ap-textarea::placeholder { color: #6a7a84; }
+.ap-send-btn {
+  width: 40px; height: 40px;
+  background: rgba(126,200,176,0.2); border: 1px solid rgba(126,200,176,0.3);
+  border-radius: 12px; color: #7ec8b0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s;
+}
+.ap-send-btn:hover { background: rgba(126,200,176,0.3); }
+.ap-send-btn:disabled { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #6a7a84; cursor: not-allowed; }
+.ap-send-btn svg { width: 16px; height: 16px; }
+.ap-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 299;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s;
+}
+.ap-overlay.visible { opacity: 1; pointer-events: all; }
+@media (max-width: 768px) { .ap-panel { width: 100%; } }
+
+.chart-svg { overflow: visible; }
+
+/* ── MOBILE ONLY ── */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .gaffa-btn-sub { display: none; }
+  .stat-bar { flex-wrap: wrap; justify-content: space-around; padding: 12px 16px; }
+  .stat-item { padding: 6px 12px; }
+  .stat-item + .stat-item::before { display: none; }
+  .popup { max-height: 80vh; }
+  .popup-title { font-size: 26px; }
+  .gaffa-panel { width: 100% !important; }
+  .chart-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .chart-svg { min-width: 500px; }
+}
+
+.popup-overlay {
+  position: fixed; inset: 0;
+  background: rgba(45,51,64,0.35);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.popup-overlay.visible { opacity: 1; pointer-events: all; }
+
+.popup {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(245,248,252,0.97);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.8);
+  border-radius: 20px 20px 0 0;
+  padding: 0 0 32px;
+  z-index: 101;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  max-height: 65vh;
+  display: flex; flex-direction: column;
+}
+.popup.visible { transform: translateY(0); }
+
+.popup-handle {
+  width: 40px; height: 4px;
+  background: rgba(45,51,64,0.15);
+  border-radius: 2px;
+  margin: 14px auto 0;
+  flex-shrink: 0;
+}
+.popup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 28px 14px;
+  border-bottom: 1px solid rgba(45,51,64,0.08);
+  flex-shrink: 0;
+}
+.popup-title { font-size: 36px; font-weight: 900; color: #2d3340; letter-spacing: -0.5px; }
+.popup-title em { font-style: normal; }
+.popup-count { font-size: 14px; font-weight: 700; color: #8a94a6; }
+.popup-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(45,51,64,0.08); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #5a6478; transition: background 0.15s;
+}
+.popup-close:hover { background: rgba(45,51,64,0.14); }
+
+.popup-list { overflow-y: auto; flex: 1; padding: 8px 28px; }
+.popup-list::-webkit-scrollbar { width: 4px; }
+.popup-list::-webkit-scrollbar-thumb { background: rgba(45,51,64,0.1); border-radius: 2px; }
+
+.popup-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(45,51,64,0.06);
+  animation: rowIn 0.3s ease both;
+}
+.popup-row:last-child { border-bottom: none; }
+@keyframes rowIn {
+  from { opacity:0; transform:translateY(8px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.row-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-red   { background: #e05252; }
+.dot-green { background: #4a9b7f; }
+.dot-amber { background: #f0a500; }
+.dot-blue  { background: #5b8dee; }
+.dot-grey  { background: #b0b8c4; }
+
+.row-id { font-size: 13px; font-weight: 700; color: #8a94a6; flex-shrink: 0; width: 120px; }
+.row-info { flex: 1; }
+.row-title { font-size: 18px; font-weight: 700; color: #2d3340; line-height: 1.3; cursor: pointer; }
+.row-title:hover { color: #4a9b7f; }
+.row-meta { font-size: 14px; color: #8a94a6; margin-top: 2px; }
+
+.row-badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 10px; flex-shrink: 0; }
+.badge-ss { background: rgba(74,155,127,0.12); color: #4a9b7f; }
+.badge-ap { background: rgba(240,165,0,0.12); color: #d4920a; }
+.badge-rs { background: rgba(91,141,238,0.12); color: #3d6fd4; }
+.badge-cl { background: rgba(45,51,64,0.07); color: #8a94a6; }
+
+.row-btn {
+  font-size: 13px; font-weight: 700;
+  padding: 8px 16px; border-radius: 8px;
+  border: none; cursor: pointer;
+  font-family: 'Barlow', sans-serif;
+  background: #2d3340; color: #fff;
+  flex-shrink: 0; transition: all 0.15s;
+}
+.row-btn:hover { background: #4a9b7f; }
+
+/* ── POPUP GROUPS ── */
+.popup-group-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0 8px; cursor: pointer; user-select: none;
+  border-bottom: 1px solid rgba(45,51,64,0.08); margin-bottom: 4px;
+}
+.popup-group-header:first-child { padding-top: 6px; }
+.group-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 800;
+  color: #8a94a6; text-transform: uppercase; letter-spacing: 1px;
+}
+.group-count {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 900; color: #fff;
+}
+.gc-green { background: #4a9b7f; }
+.gc-red   { background: #e05252; }
+.gc-amber { background: #f0a500; }
+.gc-grey  { background: #b0b8c4; }
+.gc-blue  { background: #5b8dee; }
+.group-chevron { font-size: 11px; color: #b0b8c4; transition: transform 0.2s; }
+.group-chevron.open { transform: rotate(180deg); }
+.popup-group-rows { overflow: hidden; transition: max-height 0.3s ease; }
+.popup-group-rows.collapsed { max-height: 0 !important; }
+
+/* ── TIMELINE POPUP ── */
+.timeline-popup {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(245,248,252,0.98);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.8);
+  border-radius: 20px 20px 0 0;
+  padding: 0 0 32px;
+  z-index: 102;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  max-height: 80vh;
+  display: flex; flex-direction: column;
+}
+.timeline-popup.visible { transform: translateY(0); }
+.timeline-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 28px 14px;
+  border-bottom: 1px solid rgba(45,51,64,0.08); flex-shrink: 0;
+}
+.timeline-back {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(45,51,64,0.08); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #5a6478; transition: background 0.15s; flex-shrink: 0;
+}
+.timeline-back:hover { background: rgba(45,51,64,0.14); }
+.timeline-header-info { flex: 1; }
+.timeline-id { font-size: 13px; font-weight: 700; color: #8a94a6; margin-bottom: 2px; }
+.timeline-title-text { font-size: 22px; font-weight: 900; color: #2d3340; letter-spacing: -0.3px; line-height: 1.2; }
+.timeline-close {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(45,51,64,0.08); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #5a6478; transition: background 0.15s;
+}
+.timeline-close:hover { background: rgba(45,51,64,0.14); }
+.timeline-body { overflow-y: auto; flex: 1; padding: 20px 28px 8px; }
+.timeline-body::-webkit-scrollbar { width: 4px; }
+.timeline-body::-webkit-scrollbar-thumb { background: rgba(45,51,64,0.1); border-radius: 2px; }
+.problem-summary {
+  background: rgba(45,51,64,0.04); border-radius: 12px; padding: 16px 18px;
+  margin-bottom: 24px; font-size: 15px; font-weight: 500; color: #2d3340; line-height: 1.6;
+}
+.timeline-track { position: relative; padding-left: 32px; margin-bottom: 24px; }
+.timeline-track::before {
+  content: ''; position: absolute; left: 10px; top: 8px; bottom: 8px;
+  width: 2px; background: rgba(45,51,64,0.1);
+}
+.timeline-step { position: relative; margin-bottom: 28px; animation: rowIn 0.3s ease both; }
+.timeline-step:last-child { margin-bottom: 0; }
+.timeline-step-dot {
+  position: absolute; left: -26px; top: 5px;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(45,51,64,0.12);
+}
+.timeline-step-dot.active { box-shadow: 0 0 0 3px rgba(74,155,127,0.35); }
+.timeline-step-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #8a94a6; margin-bottom: 4px; }
+.timeline-step-label.active { color: #4a9b7f; }
+.timeline-step-main { font-size: 16px; font-weight: 700; color: #2d3340; line-height: 1.3; }
+.timeline-step-sub { font-size: 13px; color: #8a94a6; margin-top: 3px; }
+.timeline-step-note {
+  margin-top: 8px; padding: 10px 14px;
+  background: rgba(45,51,64,0.04); border-radius: 8px;
+  font-size: 14px; color: #2d3340; line-height: 1.5;
+}
+.timeline-step.pending .timeline-step-main { color: #b0b8c4; }
+.timeline-step.pending .timeline-step-sub { color: #c8cfd8; }
+.timeline-actions {
+  padding: 16px 28px 0; flex-shrink: 0;
+  border-top: 1px solid rgba(45,51,64,0.08);
+  display: flex; gap: 10px;
+}
+.tl-btn-primary {
+  flex: 1; padding: 14px; background: #2d3340; color: #fff;
+  border: none; border-radius: 10px; font-size: 15px; font-weight: 800;
+  font-family: 'Barlow', sans-serif; cursor: pointer; transition: background 0.15s;
+}
+.tl-btn-primary:hover { background: #4a9b7f; }
+.tl-btn-secondary {
+  padding: 14px 20px; background: rgba(45,51,64,0.08); color: #2d3340;
+  border: none; border-radius: 10px; font-size: 15px; font-weight: 800;
+  font-family: 'Barlow', sans-serif; cursor: pointer; transition: background 0.15s;
+}
+.tl-btn-secondary:hover { background: rgba(45,51,64,0.14); }
+
+/* ── TOP BAR ── */
+.topbar { position: relative; z-index: 2; padding: 18px 0 0; flex-shrink: 0; width: 100%; }
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 36px 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.7);
+}
+.topbar-logo { font-size: 22px; font-weight: 900; color: #2d3340; letter-spacing: -0.5px; line-height: 1; }
+.topbar-logo em { color: #4a9b7f; font-style: normal; }
+.topbar-right { font-size: 22px; font-weight: 400; color: #2d3340; letter-spacing: -0.3px; line-height: 1; }
+
+/* ── SIDEBAR ── */
+.app-layout { display: flex; height: 100%; overflow: hidden; }
+.sidebar {
+  width: 52px; flex-shrink: 0; background: #b0bcd0;
+  border-right: 1px solid rgba(255,255,255,0.7);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 0 20px; gap: 4px; position: relative; z-index: 2; height: 100%;
+}
+.sidebar-logo-mark {
+  width: 52px; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px; flex-shrink: 0; padding-top: 18px; padding-bottom: 12px;
+}
+.sidebar-logo-mark span { font-size: 16px; font-weight: 900; color: #2d3340; letter-spacing: -0.5px; }
+.sidebar-logo-mark em { color: #4a9b7f; font-style: normal; }
+.sidebar-item {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative; border: none; background: transparent; transition: all 0.15s;
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.5); }
+.sidebar-item svg { width: 18px; height: 18px; stroke: #2d3340; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0.55; transition: opacity 0.15s; }
+.sidebar-item:hover svg { opacity: 1; }
+.sidebar-item.insight svg { stroke: #4a9b7f; opacity: 0.9; filter: drop-shadow(0 0 4px rgba(74,155,127,0.4)); }
+.sidebar-item .tip {
+  position: absolute; left: 54px; top: 50%; transform: translateY(-50%);
+  background: rgba(45,51,64,0.88); color: #fff; font-size: 11px; font-weight: 700;
+  padding: 5px 10px; border-radius: 7px; white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 0.15s; font-family: 'Barlow', sans-serif; z-index: 200;
+}
+.sidebar-item:hover .tip { opacity: 1; }
+.sidebar-notif {
+  position: absolute; top: 6px; right: 6px; width: 14px; height: 14px;
+  background: #e05a5a; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 900; color: #fff; border: 2px solid rgba(205,213,224,0.8);
+}
+.main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.bottom-section { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; background: #d0d8e4; padding: 4px 0 8px; }
+
+/* ── GAFFA BUTTON ── */
+.gaffa-btn {
+  position: fixed; top: 16px; right: 16px;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.55); backdrop-filter: blur(12px);
+  border: 1px solid rgba(74,155,127,0.25); border-radius: 50px;
+  padding: 7px 14px 7px 8px; cursor: pointer; transition: all 0.2s;
+  z-index: 10; box-shadow: 0 4px 20px rgba(74,155,127,0.12);
+}
+.gaffa-btn:hover { background: rgba(255,255,255,0.8); box-shadow: 0 6px 28px rgba(74,155,127,0.22); transform: translateY(-1px); }
+.gaffa-btn-icon {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(135deg, #4a9b7f, #2d7a60);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(74,155,127,0.4);
+}
+.gaffa-btn-icon svg { width: 12px; height: 12px; stroke: #fff; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gaffa-btn-text { display: flex; flex-direction: column; }
+.gaffa-btn-label { font-size: 11px; font-weight: 900; color: #2d3340; letter-spacing: -0.2px; line-height: 1.1; }
+.gaffa-btn-sub { font-size: 9px; font-weight: 500; color: #8a94a6; line-height: 1.2; }
+
+/* ── TOPBAR ── */
+.topbar {
+  flex-shrink: 0;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.5);
+  position: relative; z-index: 2;
+}
+.topbar-team {
+  font-size: 28px; font-weight: 900;
+  color: #2d3340; letter-spacing: -0.5px; line-height: 1;
+}
+.topbar-team em { color: #4a9b7f; font-style: normal; }
+
+
+.gaffa-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 460px;
+  background: rgba(245,248,252,0.97); backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(255,255,255,0.8); z-index: 200;
+  transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.34,1.2,0.64,1);
+  display: flex; flex-direction: column; box-shadow: -8px 0 40px rgba(45,51,64,0.15);
+}
+.gaffa-panel.visible { transform: translateX(0); }
+.gaffa-panel-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 20px 20px 16px; border-bottom: 1px solid rgba(45,51,64,0.08); flex-shrink: 0;
+}
+.gaffa-panel-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, #4a9b7f, #2d7a60);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(74,155,127,0.35);
+}
+.gaffa-panel-icon svg { width: 18px; height: 18px; stroke: #fff; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gaffa-panel-title { flex: 1; }
+.gaffa-panel-name { font-size: 20px; font-weight: 900; color: #2d3340; letter-spacing: -0.3px; line-height: 1; }
+.gaffa-panel-name em { color: #4a9b7f; font-style: normal; }
+.gaffa-panel-status { font-size: 11px; font-weight: 600; color: #4a9b7f; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+.gaffa-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #4a9b7f; animation: bpulse 2.2s ease-in-out infinite; }
+.gaffa-close {
+  width: 32px; height: 32px; border-radius: 50%; background: rgba(45,51,64,0.08);
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #5a6478; transition: background 0.15s;
+}
+.gaffa-close:hover { background: rgba(45,51,64,0.14); }
+.gaffa-chat-area { flex: 1; overflow-y: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; }
+.gaffa-chat-area::-webkit-scrollbar { width: 4px; }
+.gaffa-chat-area::-webkit-scrollbar-thumb { background: rgba(45,51,64,0.1); border-radius: 2px; }
+.gaffa-welcome {
+  background: rgba(74,155,127,0.06); border: 1px solid rgba(74,155,127,0.15);
+  border-radius: 16px; padding: 18px; font-size: 14px; font-weight: 500; color: #2d3340; line-height: 1.6;
+}
+.gaffa-welcome strong { font-weight: 800; color: #2d3340; }
+.gaffa-suggestions { display: flex; flex-direction: column; gap: 8px; }
+.gaffa-suggestion {
+  padding: 12px 16px; background: rgba(255,255,255,0.8);
+  border: 1px solid rgba(45,51,64,0.08); border-radius: 12px;
+  font-size: 13px; font-weight: 600; color: #2d3340; cursor: pointer;
+  transition: all 0.15s; text-align: left; font-family: 'Barlow', sans-serif;
+}
+.gaffa-suggestion:hover { border-color: rgba(74,155,127,0.3); background: rgba(74,155,127,0.05); color: #4a9b7f; }
+.gaffa-input-area {
+  padding: 14px 16px; border-top: 1px solid rgba(45,51,64,0.08);
+  display: flex; gap: 10px; align-items: center; flex-shrink: 0;
+}
+.gaffa-input {
+  flex: 1; padding: 12px 16px; background: rgba(45,51,64,0.05);
+  border: 1px solid rgba(45,51,64,0.1); border-radius: 24px;
+  font-size: 14px; font-family: 'Barlow', sans-serif; color: #2d3340; outline: none; transition: border 0.15s;
+}
+.gaffa-input:focus { border-color: rgba(74,155,127,0.4); }
+.gaffa-input::placeholder { color: #b0b8c4; }
+
+/* Action Helper — dark theme matching Gaffa chats */
+.gaffa-panel { background: #2c3440; }
+.gaffa-panel-header { background: rgba(44,52,64,0.95); border-bottom: 1px solid rgba(255,255,255,0.1); }
+.gaffa-panel-name { color: #f0f2f4 !important; }
+.gaffa-panel-name em { color: #7ec8b0 !important; }
+.gaffa-panel-status { color: #7ec8b0 !important; }
+.gaffa-status-dot { background: #7ec8b0 !important; }
+.gaffa-close { color: #a8b4bc !important; }
+.gaffa-close:hover { background: rgba(255,255,255,0.1) !important; }
+.gaffa-chat-area { background: #2c3440; }
+
+.ah-section { display: flex; flex-direction: column; gap: 12px; padding: 4px 0; }
+.ah-intro { font-size: 14px; color: #a8b4bc; line-height: 1.6; }
+.ah-ap { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; }
+.ah-ap-header { padding: 12px 16px; background: rgba(255,255,255,0.05); cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; }
+.ah-ap-header:hover { background: rgba(255,255,255,0.08); }
+.ah-ap-title { font-size: 13px; font-weight: 700; color: #f0f2f4; line-height: 1.3; }
+.ah-ap-meta { font-size: 11px; color: #6a7a84; margin-top: 2px; }
+.ah-ap-chevron { font-size: 10px; color: #6a7a84; transition: transform 0.2s; }
+.ah-ap-chevron.open { transform: rotate(180deg); }
+.ah-ap-actions { display: none; padding: 8px 12px 12px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); }
+.ah-ap-actions.open { display: block; }
+.ah-action-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 6px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+.ah-action-item:hover { background: rgba(126,200,176,0.08); }
+.ah-action-cb { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-radius: 4px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.ah-action-cb.checked { background: #7ec8b0; border-color: #7ec8b0; }
+.ah-action-cb.checked::after { content: '✓'; font-size: 10px; color: #2c3440; font-weight: 700; }
+.ah-action-label { font-size: 13px; color: #f0f2f4; line-height: 1.4; }
+.ah-action-owner { font-size: 11px; color: #6a7a84; margin-top: 2px; }
+.ah-help-btn { width: 100%; padding: 12px; background: #7ec8b0; color: #2c3440; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 12px; font-family: inherit; transition: background 0.2s; }
+.ah-help-btn:hover { background: #5aaa92; }
+.ah-help-btn:disabled { background: rgba(255,255,255,0.1); color: #6a7a84; cursor: not-allowed; }
+.ah-msg { display: flex; gap: 10px; margin-bottom: 4px; }
+.ah-msg-avatar { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #f0f2f4; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.ah-msg-bubble { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; border-top-left-radius: 4px; padding: 12px 14px; font-size: 13px; color: #f0f2f4; line-height: 1.6; flex: 1; backdrop-filter: blur(8px); }
+.ah-msg-bubble.user { background: rgba(126,200,176,0.12); border: 1px solid rgba(126,200,176,0.25); border-radius: 14px; border-top-right-radius: 4px; color: #f0f2f4; }
+.ah-typing { display: flex; gap: 4px; padding: 4px 2px; }
+.ah-typing span { width: 6px; height: 6px; background: #6a7a84; border-radius: 50%; animation: typingBounce 1.2s infinite; }
+.ah-typing span:nth-child(2) { animation-delay: 0.2s; }
+.ah-typing span:nth-child(3) { animation-delay: 0.4s; }
+.ah-back { background: none; border: none; color: #7ec8b0; font-size: 12px; font-weight: 700; cursor: pointer; padding: 0 0 8px; font-family: inherit; }
+.ah-back:hover { text-decoration: underline; }
+.ah-input-area { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(44,52,64,0.95); margin-top: auto; }
+.ah-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; font-size: 14px; color: #f0f2f4; font-family: inherit; outline: none; }
+.ah-input:focus { border-color: rgba(126,200,176,0.4); }
+.ah-input::placeholder { color: #6a7a84; }
+.ah-send { width: 36px; height: 36px; background: #7ec8b0; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+.ah-send:hover { background: #5aaa92; }
+.ah-send svg { width: 14px; height: 14px; stroke: #2c3440; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gaffa-send {
+  width: 40px; height: 40px; border-radius: 50%; background: #2d3340; border: none;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background 0.15s;
+}
+.gaffa-send:hover { background: #4a9b7f; }
+.gaffa-send svg { width: 16px; height: 16px; stroke: #fff; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+
+/* ── ACTION DETAIL ── */
+.action-detail-overlay { position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s ease; background:rgba(140,155,175,0.4); backdrop-filter:blur(3px); }
+.action-detail-overlay.visible { opacity:1; pointer-events:all; }
+.action-detail-card { background:rgba(248,250,253,0.98); border-radius:20px; width:620px; max-height:80vh; overflow-y:auto; box-shadow:0 24px 80px rgba(45,51,64,0.3); transform:scale(0.9) translateY(20px); transition:transform 0.28s cubic-bezier(0.34,1.2,0.64,1); display:flex; flex-direction:column; }
+.action-detail-overlay.visible .action-detail-card { transform:scale(1) translateY(0); }
+.ad-header { display:flex; align-items:flex-start; gap:12px; padding:20px 22px 16px; border-bottom:1px solid rgba(45,51,64,0.07); }
+.ad-header-info { flex:1; }
+.ad-snapshot-id { font-size:12px; font-weight:700; color:#8a94a6; margin-bottom:2px; }
+.ad-snapshot-title { font-size:18px; font-weight:900; color:#2d3340; line-height:1.3; }
+.ad-raised { font-size:13px; color:#8a94a6; margin-top:4px; }
+.ad-close { width:30px; height:30px; border-radius:50%; background:rgba(45,51,64,0.08); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; color:#5a6478; flex-shrink:0; transition:background 0.15s; }
+.ad-close:hover { background:rgba(45,51,64,0.14); }
+.ad-body { padding:18px 22px; display:flex; flex-direction:column; gap:10px; }
+.ad-action-item { background:rgba(45,51,64,0.04); border:1px solid rgba(45,51,64,0.07); border-radius:12px; padding:14px 16px; display:flex; align-items:flex-start; gap:10px; }
+.ad-action-num { font-size:10px; font-weight:800; color:#8a94a6; text-transform:uppercase; letter-spacing:0.8px; flex-shrink:0; margin-top:2px; }
+.ad-action-info { flex:1; }
+.ad-action-text { font-size:14px; font-weight:600; color:#2d3340; line-height:1.4; }
+.ad-action-purpose { font-size:13px; color:#5a6478; margin-top:4px; line-height:1.5; }
+.ad-action-scores { display:flex; gap:8px; margin-top:8px; }
+.ad-score-chip { padding:3px 10px; background:rgba(45,51,64,0.06); border-radius:20px; font-size:11px; font-weight:700; color:#5a6478; }
+.ad-action-meta { font-size:12px; color:#8a94a6; margin-top:4px; }
+.ad-footer { padding:14px 22px 20px; border-top:1px solid rgba(45,51,64,0.07); display:flex; gap:10px; }
+.ad-btn-primary { flex:1; padding:12px; background:#2d3340; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:800; font-family:'Barlow',sans-serif; cursor:pointer; transition:background 0.15s; }
+.ad-btn-primary:hover { background:#4a9b7f; }
+.ad-btn-secondary { padding:12px 16px; background:rgba(45,51,64,0.08); color:#2d3340; border:none; border-radius:10px; font-size:14px; font-weight:800; font-family:'Barlow',sans-serif; cursor:pointer; transition:background 0.15s; }
+.ad-btn-secondary:hover { background:rgba(45,51,64,0.14); }
+
+/* ── SLIDES PREVIEW MODAL ── */
+.slides-modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+  background: rgba(30,36,64,0.6); backdrop-filter: blur(6px);
+}
+.slides-modal-overlay.visible { opacity: 1; pointer-events: all; }
+.slides-modal {
+  background: #fff; border-radius: 20px;
+  width: 780px; max-width: 92vw;
+  box-shadow: 0 32px 80px rgba(30,36,64,0.35);
+  transform: scale(0.94) translateY(16px);
+  transition: transform 0.3s cubic-bezier(0.34,1.2,0.64,1);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.slides-modal-overlay.visible .slides-modal { transform: scale(1) translateY(0); }
+.slides-modal-header {
+  padding: 16px 20px; display: flex; align-items: center;
+  justify-content: space-between; border-bottom: 1px solid rgba(45,51,64,0.07);
+  flex-shrink: 0;
+}
+.slides-modal-title { font-size: 15px; font-weight: 800; color: #2d3340; }
+.slides-modal-id { font-size: 12px; font-weight: 600; color: #8a94a6; margin-top: 2px; }
+.slides-modal-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(45,51,64,0.08); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: #5a6478; transition: background 0.15s;
+}
+.slides-modal-close:hover { background: rgba(45,51,64,0.14); }
+.slides-modal-frame {
+  width: 100%; aspect-ratio: 16/9; border: none; display: block;
+}
+.slides-modal-footer {
+  padding: 14px 20px; border-top: 1px solid rgba(45,51,64,0.07);
+  display: flex; gap: 10px; flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING BAR -->
+<div class="loading-bar" id="loadingBar"></div>
+
+<!-- SLIDES PREVIEW MODAL -->
+<div class="slides-modal-overlay" id="slidesModalOverlay" onclick="if(event.target===this)closeSlidesModal()">
+  <div class="slides-modal" id="slidesModal">
+    <div class="slides-modal-header">
+      <div>
+        <div class="slides-modal-title" id="slidesModalTitle"></div>
+        <div class="slides-modal-id" id="slidesModalId"></div>
+      </div>
+      <button class="slides-modal-close" onclick="closeSlidesModal()">✕</button>
+    </div>
+    <iframe class="slides-modal-frame" id="slidesModalFrame" src=""></iframe>
+    <div class="slides-modal-footer">
+      <button class="ad-btn-primary" id="slidesModalApBtn" onclick="">Start ActionPlan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ACTION DETAIL -->
+<div class="action-detail-overlay" id="actionDetailOverlay" onclick="if(event.target===this)closeActionDetail()"><div class="action-detail-card" id="actionDetailCard"></div></div>
+
+<div class="app-layout">
+
+<aside class="sidebar">
+  <div class="sidebar-item insight" onclick="openSidePanel('insight')">
+    <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4.5 6.5V17a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+    <span class="tip">Anttro Insight</span>
+  </div>
+  <div class="sidebar-item" onclick="openSidePanel('attention')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div class="sidebar-notif">4</div>
+    <span class="tip">Needs Attention</span>
+  </div>
+  <div class="sidebar-item" onclick="openSidePanel('comingup')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span class="tip">Coming Up</span>
+  </div>
+</aside>
+
+<div class="main-area">
+
+<div class="topbar">
+  <div class="topbar-team" id="topbarTeam">Dashboard<em>.</em></div>
+</div>
+
+<div class="shapes-area">
+
+  <div class="row">
+
+  <!-- SnapShot -->
+  <div class="node">
+    <div class="node-title node-title-snapshot" style="width:270px;text-align:right;">SnapShot.</div>
+    <div class="shape-wrap">
+      <svg class="shape-svg" viewBox="0 0 240 265" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="ss1" cx="15%" cy="85%" r="75%"><stop offset="0%" stop-color="#ffcc00"/><stop offset="40%" stop-color="#ff9020"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ss2" cx="75%" cy="8%" r="58%"><stop offset="0%" stop-color="#ff10a0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ss3" cx="95%" cy="5%" r="40%"><stop offset="0%" stop-color="#6010b0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4" stitchTiles="stitch" result="noise"/><feColorMatrix type="saturate" values="0" in="noise" result="g"/><feBlend in="SourceGraphic" in2="g" mode="soft-light"/></filter>
+          <clipPath id="c1"><path d="M 240,25 L 120,25 A 120,120 0 1,0 240,145 Z"/></clipPath>
+        </defs>
+        <g clip-path="url(#c1)">
+          <rect width="240" height="265" fill="#f07030"/>
+          <rect width="240" height="265" fill="url(#ss1)"/>
+          <rect width="240" height="265" fill="url(#ss2)"/>
+          <rect width="240" height="265" fill="url(#ss3)"/>
+          <rect width="240" height="265" filter="url(#gr)" opacity="0.22"/>
+        </g>
+      </svg>
+      <div class="shape-num" id="num-snapshot">0</div>
+    </div>
+  </div>
+
+  <!-- Connector: To Action -->
+  <div class="connector">
+    <div class="connector-line"></div>
+    <div class="flow-bubble" onclick="openFlowPopup('toaction')" style="cursor:pointer">
+      <span class="fb-label">To Action</span>
+      <span class="fb-num" id="fb-toaction">2</span>
+    </div>
+    <div class="connector-line"></div>
+  </div>
+
+  <!-- ActionPlan -->
+  <div class="node">
+    <div class="node-title node-title-center" style="width:270px;text-align:center;margin-left:-4px;">ActionPlan.</div>
+    <div class="shape-wrap">
+      <svg class="shape-svg" viewBox="0 0 240 265" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="ap1" cx="22%" cy="22%" r="62%"><stop offset="0%" stop-color="#9878e0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ap2" cx="78%" cy="18%" r="50%"><stop offset="0%" stop-color="#6040c0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ap3" cx="52%" cy="90%" r="48%"><stop offset="0%" stop-color="#f0c020"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="ap4" cx="12%" cy="78%" r="42%"><stop offset="0%" stop-color="#6040c0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <clipPath id="c2"><circle cx="120" cy="145" r="120"/></clipPath>
+        </defs>
+        <g clip-path="url(#c2)">
+          <rect width="240" height="265" fill="#5040b0"/>
+          <rect width="240" height="265" fill="url(#ap1)"/>
+          <rect width="240" height="265" fill="url(#ap2)"/>
+          <rect width="240" height="265" fill="url(#ap3)"/>
+          <rect width="240" height="265" fill="url(#ap4)"/>
+          <rect width="240" height="265" filter="url(#gr)" opacity="0.22"/>
+        </g>
+      </svg>
+      <div class="shape-num" id="num-actionplan">12</div>
+    </div>
+  </div>
+
+  <!-- Connector: To Review -->
+  <div class="connector">
+    <div class="connector-line"></div>
+    <div class="flow-bubble" onclick="openFlowPopup('toreview')" style="cursor:pointer">
+      <span class="fb-label">To Review</span>
+      <span class="fb-num" id="fb-toreview">1</span>
+    </div>
+    <div class="connector-line"></div>
+  </div>
+
+  <!-- ReShot -->
+  <div class="node">
+    <div class="node-title node-title-right" style="width:270px;text-align:right;">ReShot.</div>
+    <div class="shape-wrap">
+      <svg class="shape-svg" viewBox="0 0 240 265" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="rs1" cx="20%" cy="25%" r="65%"><stop offset="0%" stop-color="#e8f8ff"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="rs2" cx="85%" cy="8%" r="55%"><stop offset="0%" stop-color="#00e8ff"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="rs3" cx="90%" cy="45%" r="44%"><stop offset="0%" stop-color="#9040f0"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <radialGradient id="rs4" cx="45%" cy="95%" r="48%"><stop offset="0%" stop-color="#ffd000"/><stop offset="40%" stop-color="#ff9000"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+          <clipPath id="c3"><path d="M 240,25 L 120,25 A 120,120 0 1,0 240,145 Z"/></clipPath>
+        </defs>
+        <g clip-path="url(#c3)">
+          <rect width="240" height="265" fill="#60c0f0"/>
+          <rect width="240" height="265" fill="url(#rs1)"/>
+          <rect width="240" height="265" fill="url(#rs2)"/>
+          <rect width="240" height="265" fill="url(#rs3)"/>
+          <rect width="240" height="265" fill="url(#rs4)"/>
+          <rect width="240" height="265" filter="url(#gr)" opacity="0.18"/>
+        </g>
+      </svg>
+      <div class="shape-num" id="num-reshot">6</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div style="text-align:right; padding:8px 36px 6px; position:relative; z-index:1;"><span style="font-size:11px;font-weight:600;opacity:0.5;letter-spacing:0.5px;color:#2a3050;margin-right:6px;">POWERED BY</span><span style="font-size:20px;font-weight:900;letter-spacing:-0.5px;color:#2a3050;opacity:0.6;">Anttro<em style="color:#4a9b7f;font-style:normal;">.</em></span></div>
+
+<!-- STAT BAR -->
+<div class="bottom-section">
+<div class="stat-bar">
+  <div class="stat-item">
+    <div class="stat-text">
+      <div class="stat-label">Loops Closed</div>
+      <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;"><div class="stat-dot" style="background:#4a9b7f;box-shadow:0 0 6px rgba(74,155,127,0.6)"></div><div class="stat-value" id="stat-loops">3</div></div>
+    </div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-text">
+      <div class="stat-label">Avg. SnapShot to Close</div>
+      <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;"><div class="stat-dot" style="background:#f0a500;box-shadow:0 0 6px rgba(240,165,0,0.5)"></div><div class="stat-value" id="stat-avg">18 days</div></div>
+    </div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-text">
+      <div class="stat-label">Closed This Month</div>
+      <div style="display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;"><div class="stat-dot" style="background:#5b8dee;box-shadow:0 0 6px rgba(91,141,238,0.5)"></div><div class="stat-value" id="stat-month">1</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="chart-container">
+  <div class="chart-top">
+    <div class="chart-title" id="chart-label">SnapShot submissions — May 2026</div>
+    <div class="toggle">
+      <button class="toggle-btn active" onclick="setView('daily', this)">Daily</button>
+      <button class="toggle-btn" onclick="setView('weekly', this)">Weekly</button>
+      <button class="toggle-btn" onclick="setView('monthly', this)">Monthly</button>
+    </div>
+  </div>
+  <div class="chart-wrap">
+    <svg class="chart-svg" id="chartSvg" viewBox="0 0 1000 110" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<!-- POPUP OVERLAY -->
+<div class="popup-overlay" id="popupOverlay" onclick="closePopup()"></div>
+
+<!-- POPUP -->
+<div class="popup" id="popup">
+  <div class="popup-handle"></div>
+  <div class="popup-header">
+    <div>
+      <div class="popup-title" id="popupTitle">SnapShot.</div>
+      <div class="popup-count" id="popupCount"></div>
+    </div>
+    <button class="popup-close" onclick="closePopup()">✕</button>
+  </div>
+  <div class="popup-list" id="popupList"></div>
+</div>
+
+<!-- TIMELINE POPUP -->
+<div class="timeline-popup" id="timelinePopup">
+  <div class="popup-handle"></div>
+  <div class="timeline-header">
+    <button class="timeline-back" id="timelineBack">←</button>
+    <div class="timeline-header-info">
+      <div class="timeline-id" id="timelineId"></div>
+      <div class="timeline-title-text" id="timelineTitleText"></div>
+    </div>
+    <button class="timeline-close" onclick="closeTimeline()">✕</button>
+  </div>
+  <div class="timeline-body" id="timelineBody"></div>
+  <div class="timeline-actions" id="timelineActions"></div>
+</div>
+
+<!-- GAFFA SIDE PANEL -->
+<div class="gaffa-panel" id="gaffaPanel">
+  <div class="gaffa-panel-header">
+    <div class="gaffa-panel-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4.5 6.5V17a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+    </div>
+    <div class="gaffa-panel-title">
+      <div class="gaffa-panel-name">The Gaffa<em>.</em></div>
+      <div class="gaffa-panel-status"><div class="gaffa-status-dot"></div>Stuck on an action? I can help.</div>
+    </div>
+    <button class="gaffa-close" onclick="toggleGaffa()">✕</button>
+  </div>
+  <div class="gaffa-chat-area" id="gaffaChatArea"></div>
+</div>
+</div><!-- /bottom-section -->
+
+<script>
+
+// ── CHART DATA (fallback) ──
+const _teamId = new URLSearchParams(window.location.search).get('team') || '';
+let daily = [0,0,1,0,2,1,0,3,1,2,0,1,4,2,1,3,0,2,1,3,2,4,1,2,3,1,2,0,1,2,3];
+let weekly = [3,7,5,9,12,8,6,11,4,14,9,7];
+let monthly = [4,7,3,9,12,8,5,11,6,14,9,7];
+const weekLabels = ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12'];
+const monthNames = ['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'];
+
+// ── LOADING BAR ──
+function startLoading() {
+  const bar = document.getElementById('loadingBar');
+  bar.style.width = '0%'; bar.style.opacity = '1';
+  setTimeout(() => bar.style.width = '30%', 50);
+  setTimeout(() => bar.style.width = '60%', 300);
+  setTimeout(() => bar.style.width = '85%', 700);
+}
+function finishLoading() {
+  const bar = document.getElementById('loadingBar');
+  bar.style.width = '100%';
+  setTimeout(() => {
+    bar.style.opacity = '0';
+    setTimeout(() => { bar.style.display = 'none'; }, 400);
+  }, 200);
+}
+
+// ── CHART ──
+function smoothPath(points, vw, vh, padL, padR, padT, padB) {
+  const n = points.length;
+  const max = Math.max(...points, 1);
+  const xs = points.map((_, i) => padL + (i / (n-1)) * (vw - padL - padR));
+  const ys = points.map(v => padT + (1 - v/max) * (vh - padT - padB));
+  let d = `M ${xs[0]},${ys[0]}`;
+  for (let i = 1; i < n; i++) {
+    const cpx1 = xs[i-1] + (xs[i]-xs[i-1])/3;
+    const cpx2 = xs[i] - (xs[i]-xs[i-1])/3;
+    d += ` C ${cpx1},${ys[i-1]} ${cpx2},${ys[i]} ${xs[i]},${ys[i]}`;
+  }
+  return { d, xs, ys };
+}
+
+function renderChart(view) {
+  const svg = document.getElementById('chartSvg');
+  if (!svg) return;
+  const vw = 1000, vh = 110, padL = 8, padR = 8, padT = 10, padB = 26;
+  const data = view === 'daily' ? daily : view === 'weekly' ? weekly : monthly;
+  const labels = view === 'daily' ? data.map((_,i) => i+1) : view === 'weekly' ? weekLabels : monthNames;
+  const { d, xs, ys } = smoothPath(data, vw, vh, padL, padR, padT, padB);
+  const fillD = d + ` L ${xs[xs.length-1]},${vh-padB} L ${xs[0]},${vh-padB} Z`;
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(255,120,60,0.35)"/>
+        <stop offset="100%" stop-color="rgba(240,60,140,0)"/>
+      </linearGradient>
+    </defs>
+    <line x1="${padL}" y1="${padT}" x2="${vw-padR}" y2="${padT}" stroke="rgba(45,51,64,0.06)" stroke-width="1"/>
+    <line x1="${padL}" y1="${padT+(vh-padT-padB)/2}" x2="${vw-padR}" y2="${padT+(vh-padT-padB)/2}" stroke="rgba(45,51,64,0.06)" stroke-width="1"/>
+    <path d="${fillD}" fill="url(#lg)"/>
+    <path d="${d}" fill="none" stroke="rgba(255,100,60,0.9)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${xs.map((x,i) => `
+      <circle cx="${x}" cy="${ys[i]}" r="3.5" fill="rgba(255,100,60,0.9)" class="chart-dot" data-val="${data[i]}" data-label="${labels[i]}" style="cursor:pointer"/>
+      <text x="${x}" y="${vh-5}" font-size="${view==='daily'?'10':'11'}" fill="rgba(255,255,255,0.7)" font-family="Barlow,sans-serif" font-weight="600" text-anchor="middle">${labels[i]}</text>
+    `).join('')}
+  `;
+  svg.querySelectorAll('.chart-dot').forEach(dot => {
+    dot.addEventListener('mouseenter', () => {
+      const tt = document.getElementById('tooltip');
+      const svgRect = svg.getBoundingClientRect();
+      const wrapRect = document.querySelector('.chart-wrap').getBoundingClientRect();
+      const scaleX = svgRect.width / vw;
+      const cx = parseFloat(dot.getAttribute('cx')) * scaleX + svgRect.left - wrapRect.left;
+      const cy = parseFloat(dot.getAttribute('cy')) * (svgRect.height/vh) - 36;
+      tt.style.left = cx + 'px'; tt.style.top = cy + 'px';
+      tt.textContent = `${dot.dataset.label}: ${dot.dataset.val} SnapShots`;
+      tt.classList.add('visible');
+    });
+    dot.addEventListener('mouseleave', () => document.getElementById('tooltip').classList.remove('visible'));
+  });
+}
+
+function setView(view, btn) {
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const now = new Date();
+  document.getElementById('chart-label').textContent = view === 'daily'
+    ? `SnapShot submissions — ${now.toLocaleString('default',{month:'long'})} ${now.getFullYear()}`
+    : view === 'weekly' ? 'SnapShot submissions — Last 12 weeks'
+    : 'SnapShot submissions — Last 12 months';
+  renderChart(view);
+}
+
+// ── LIVE DATA ──
+async function loadDashboardData() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const teamId = new URLSearchParams(window.location.search).get('team');
+    const url = teamId ? `/api/data?team=${teamId}` : '/api/data';
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error('API not available');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const { teamName, stats, chart, rows, newSnapshots } = data;
+
+    // ── TEAM NAME ──
+    if (teamName) {
+      document.getElementById('topbarTeam').innerHTML = `${teamName} Dashboard<em>.</em>`;
+    }
+
+    // ── SIDE PANELS — wire to live data ──
+    if (data.needsAttention) {
+      sidePanels.attention.html = data.needsAttention.length === 0
+        ? `<div style="padding:20px 0;text-align:center;color:#8a94a6;font-size:14px;font-weight:600">No items need attention right now 👍</div>`
+        : `<div style="padding:8px 0 20px">${data.needsAttention.map((item, i) => `
+          <div class="popup-row" style="animation-delay:${i*0.04}s">
+            <div class="row-status-dot" style="background:${item.dot}"></div>
+            <div class="row-info">
+              <div class="row-title">${item.title}</div>
+              <div class="row-meta">${item.sub}</div>
+            </div>
+            <button class="row-btn" onclick="handleRowBtn('${item.btn}','${item.id}','${_teamId}')">${item.btn}</button>
+          </div>`).join('')}</div>`;
+      // Update sidebar notif count
+      const notif = document.querySelector('.sidebar-notif');
+      if (notif) notif.textContent = data.needsAttention.length;
+    }
+
+    if (data.comingUp) {
+      sidePanels.comingup.html = data.comingUp.length === 0
+        ? `<div style="padding:20px 0;text-align:center;color:#8a94a6;font-size:14px;font-weight:600">Nothing coming up in the next 30 days.</div>`
+        : `<div style="padding:8px 0 20px">${data.comingUp.map((item, i) => `
+          <div class="popup-row" style="animation-delay:${i*0.04}s">
+            <div class="row-status-dot" style="background:${item.dot}"></div>
+            <div class="row-info">
+              <div class="row-title">${item.title}</div>
+              <div class="row-meta">${item.sub}</div>
+            </div>
+            <button class="row-btn" onclick="handleRowBtn('${item.btn}','${item.id}','${_teamId}')">${item.btn}</button>
+          </div>`).join('')}</div>`;
+    }
+
+    if (data.insight) {
+      sidePanels.insight.html = `
+        <div style="padding:8px 0 20px">
+          <div style="background:rgba(74,155,127,0.08);border:1px solid rgba(74,155,127,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px">
+            <div style="font-size:11px;font-weight:800;color:#4a9b7f;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Loop Health</div>
+            <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">${data.insight.loopHealth}</div>
+          </div>
+          <div style="background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px">
+            <div style="font-size:11px;font-weight:800;color:#d4920a;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Trend</div>
+            <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">${data.insight.trend}</div>
+          </div>
+          <div style="background:rgba(91,141,238,0.08);border:1px solid rgba(91,141,238,0.2);border-radius:14px;padding:18px 20px">
+            <div style="font-size:11px;font-weight:800;color:#3d6fd4;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Recommendation</div>
+            <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">${data.insight.recommendation}</div>
+          </div>
+        </div>`;
+    }
+    document.getElementById('num-snapshot').textContent = stats.totalSnapshots;
+    document.getElementById('num-actionplan').textContent = stats.totalActionPlans;
+    document.getElementById('num-reshot').textContent = stats.totalReshots;
+    document.getElementById('fb-toaction').textContent = stats.snapshotOpen;
+    document.getElementById('fb-toreview').textContent = stats.actionPlanOpen;
+    document.getElementById('stat-loops').textContent = stats.loopsClosed;
+    document.getElementById('stat-avg').textContent = stats.avgDaysToClose ? `${Math.abs(stats.avgDaysToClose)} days` : '—';
+    document.getElementById('stat-month').textContent = stats.closedThisMonth;
+    window._liveSnapshots = data.snapshots || [];
+    // Enrich snapshot rows with ishikawa/waste from raw snapshot data
+    const enrichedSnapshots = (rows.snapshots || []).map(row => {
+      const raw = (data.snapshots || []).find(s => s.id === row.id || s.snapshot_id === row.id);
+      return raw ? { ...row, ishikawa: raw.ishikawa || '', waste: raw.waste || '', snapshot_url: raw.snapshot_url || raw.slides_url || '' } : row;
+    });
+    popupData.snapshot = enrichedSnapshots;
+    popupData.actionplan = rows.actionplans;
+    popupData.reshot = rows.reshots;
+    window._liveActions = data.actions || [];
+    window._newSnapshots = newSnapshots;
+    daily = chart.daily; weekly = chart.weekly; monthly = chart.monthly;
+  } catch (err) {
+    console.log('Using placeholder data:', err.message);
+  }
+  renderChart('daily');
+}
+
+// ── SCALE SHAPES ROW TO FIT SCREEN ──
+function scaleShapesRow() {
+  const row = document.querySelector('.row');
+  const shapesArea = document.querySelector('.shapes-area');
+  if (!row || !shapesArea) return;
+  // Reset scale first to measure natural size
+  row.style.transform = '';
+  row.style.transformOrigin = 'center center';
+  const naturalWidth = row.scrollWidth;
+  const naturalHeight = row.scrollHeight;
+  const availableWidth = shapesArea.offsetWidth - 40;
+  const availableHeight = shapesArea.offsetHeight - 20;
+  const scaleX = availableWidth / naturalWidth;
+  const scaleY = availableHeight / naturalHeight;
+  const scale = Math.min(scaleX, scaleY, 1.3);
+  row.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('load', () => {
+  startLoading();
+  loadDashboardData().finally(() => {
+    finishLoading();
+    setTimeout(scaleShapesRow, 100);
+  });
+});
+window.addEventListener('resize', scaleShapesRow);
+
+// ── SIDE PANEL DATA ──
+const sidePanels = {
+  insight: {
+    title: 'Anttro\u2019s Insight',
+    html: `
+      <div style="padding:8px 0 20px">
+        <div style="background:rgba(74,155,127,0.08);border:1px solid rgba(74,155,127,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:800;color:#4a9b7f;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Loop Health</div>
+          <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">Your team has <strong>5 open SnapShots</strong> with no ActionPlan started. The average time from SnapShot to ActionPlan is <strong>4 days</strong>. 2 review dates are coming up in the next 14 days.</div>
+        </div>
+        <div style="background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.2);border-radius:14px;padding:18px 20px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:800;color:#d4920a;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Trend</div>
+          <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">SnapShot submissions are up <strong>40% this month</strong> compared to last. This is a positive sign of team engagement with the loop process.</div>
+        </div>
+        <div style="background:rgba(91,141,238,0.08);border:1px solid rgba(91,141,238,0.2);border-radius:14px;padding:18px 20px">
+          <div style="font-size:11px;font-weight:800;color:#3d6fd4;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Recommendation</div>
+          <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6">Prioritise starting ActionPlans for the 2 oldest open SnapShots. Both have been waiting over 6 days with no action taken.</div>
+        </div>
+      </div>
+    `
+  },
+  attention: {
+    title: 'Needs Attention',
+    html: `
+      <div style="padding:8px 0 20px">
+        ${[
+          { dot:'#e05a5a', title:'Bolts snapping on line 3', sub:'No ActionPlan · 6 days since SnapShot', btn:'Start ActionPlan', id:'ANT-010-002' },
+          { dot:'#e05a5a', title:'Forklift bay markings faded', sub:'No ActionPlan · 9 days since SnapShot', btn:'Start ActionPlan', id:'ANT-010-005' },
+          { dot:'#f0a500', title:'Scanner signal loss at hitch rack', sub:'ReShot overdue · 3 days past review date', btn:'Start ReShot', id:'ANT-010-001-AP1' },
+          { dot:'#f0a500', title:'Packing station layout bottleneck', sub:'Review due in 2 days', btn:'View ActionPlan', id:'ANT-010-004-AP1' },
+        ].map((item, i) => `
+          <div class="popup-row" style="animation-delay:${i*0.04}s">
+            <div class="row-status-dot" style="background:${item.dot}"></div>
+            <div class="row-info">
+              <div class="row-title">${item.title}</div>
+              <div class="row-meta">${item.sub}</div>
+            </div>
+            <button class="row-btn" onclick="handleRowBtn('${item.btn}','${item.id}','${_teamId}')">${item.btn}</button>
+          </div>
+        `).join('')}
+      </div>
+    `
+  },
+  comingup: {
+    title: 'Coming Up',
+    html: `
+      <div style="padding:8px 0 20px">
+        ${[
+          { dot:'#f0a500', title:'Scanner signal loss \u2014 Review', sub:'In 2 days · 3 actions to review', btn:'View' },
+          { dot:'#4a9b7f', title:'Dispatch signage check', sub:'In 7 days · 2 actions to review', btn:'View' },
+          { dot:'#4a9b7f', title:'Packing station layout review', sub:'In 14 days · 4 actions to review', btn:'View' },
+        ].map((item, i) => `
+          <div class="popup-row" style="animation-delay:${i*0.04}s">
+            <div class="row-status-dot" style="background:${item.dot}"></div>
+            <div class="row-info">
+              <div class="row-title">${item.title}</div>
+              <div class="row-meta">${item.sub}</div>
+            </div>
+            <button class="row-btn" onclick="handleRowBtn('${item.btn}','${item.id}','${_teamId}')">${item.btn}</button>
+          </div>
+        `).join('')}
+      </div>
+    `
+  }
+};
+
+function openSidePanel(type) {
+  const panel = sidePanels[type];
+  const list = document.getElementById('popupList');
+  document.getElementById('popupTitle').textContent = panel.title;
+  document.getElementById('popupCount').textContent = '';
+  list.innerHTML = panel.html;
+  document.getElementById('popupOverlay').classList.add('visible');
+  document.getElementById('popup').classList.add('visible');
+}
+
+// ── POPUP DATA ──
+const popupData = {
+  snapshot: [
+    { id:'ANT-010-001', title:'Scanner signal loss at hitch rack area', by:'Aidan Soulsby', date:'7 May 2026', status:'ActionPlan Active', badge:'badge-ap', dot:'dot-amber', btn:'View Slides' },
+    { id:'ANT-010-002', title:'Bolts snapping during tightening on line 3', by:'Tom Harris', date:'5 May 2026', status:'SnapShot Complete', badge:'badge-ss', dot:'dot-red', btn:'Start ActionPlan' },
+    { id:'ANT-010-003', title:'Missing safety signage in dispatch area', by:'Emma Clarke', date:'12 Apr 2026', status:'Loop Closed', badge:'badge-cl', dot:'dot-grey', btn:'View Slides' },
+    { id:'ANT-010-004', title:'Packing station layout causing bottleneck', by:'James Mills', date:'28 Apr 2026', status:'ActionPlan Active', badge:'badge-ap', dot:'dot-amber', btn:'View Slides' },
+    { id:'ANT-010-005', title:'Forklift bay floor markings faded', by:'Aidan Soulsby', date:'2 May 2026', status:'SnapShot Complete', badge:'badge-ss', dot:'dot-red', btn:'Start ActionPlan' },
+  ],
+  actionplan: [
+    { id:'ANT-010-001-AP1', title:'Scanner signal loss at hitch rack area', by:'Sarah Johnson', date:'8 May 2026', status:'Active · Review 7 Jun', badge:'badge-ap', dot:'dot-amber', btn:'View ActionPlan' },
+    { id:'ANT-010-004-AP1', title:'Packing station layout causing bottleneck', by:'Sarah Johnson', date:'30 Apr 2026', status:'Active · Review 30 May', badge:'badge-ap', dot:'dot-amber', btn:'View ActionPlan' },
+    { id:'ANT-010-003-AP1', title:'Missing safety signage in dispatch area', by:'Sarah Johnson', date:'15 Apr 2026', status:'Closed', badge:'badge-cl', dot:'dot-grey', btn:'View ActionPlan' },
+  ],
+  reshot: [
+    { id:'ANT-010-003-RS1', title:'Missing safety signage in dispatch area', by:'Sarah Johnson', date:'8 Jun 2026', status:'Loop Closed', badge:'badge-cl', dot:'dot-grey', btn:'View ReShot' },
+    { id:'ANT-010-001-RS1', title:'Scanner signal loss at hitch rack area', by:'Sarah Johnson', date:'Due 7 Jun 2026', status:'ReShot Due', badge:'badge-rs', dot:'dot-blue', btn:'Start ReShot' },
+  ]
+};
+
+const popupTitles = { snapshot:'SnapShot.', actionplan:'ActionPlan.', reshot:'ReShot.' };
+
+function buildGroup(label, countClass, rows, defaultOpen, rowType) {
+  if (!rows.length) return '';
+  const id = 'grp-' + Math.random().toString(36).slice(2);
+  const rowsHtml = rows.map((row, i) => `
+    <div class="popup-row" style="animation-delay:${i*0.04}s;cursor:pointer" onclick="openActionDetail('${row.id}','${rowType}')">
+      <div class="row-status-dot ${row.dot}"></div>
+      <div class="row-info">
+        <div class="row-title">${row.title}</div>
+        <div class="row-meta">${row.by} · ${row.date}</div>
+      </div>
+      <button class="row-btn" onclick="event.stopPropagation();handleRowBtn('${row.btn}','${row.id}','${_teamId}',rowType)">${row.btn}</button>
+    </div>
+  `).join('');
+  return `
+    <div class="popup-group-header" onclick="toggleGroup('${id}')">
+      <div class="group-label">
+        <div class="group-count ${countClass}">${rows.length}</div>
+        ${label}
+      </div>
+      <span class="group-chevron ${defaultOpen ? 'open' : ''}" id="chev-${id}">▼</span>
+    </div>
+    <div class="popup-group-rows ${defaultOpen ? '' : 'collapsed'}" id="${id}" style="max-height:${defaultOpen ? rows.length * 80 + 'px' : '0'}">
+      ${rowsHtml}
+    </div>
+  `;
+}
+
+function toggleGroup(id) {
+  const el = document.getElementById(id);
+  const chev = document.getElementById('chev-' + id);
+  const isOpen = !el.classList.contains('collapsed');
+  if (isOpen) { el.classList.add('collapsed'); chev.classList.remove('open'); }
+  else { el.style.maxHeight = el.scrollHeight + 'px'; el.classList.remove('collapsed'); chev.classList.add('open'); }
+}
+
+function openNewPopup() {
+  const newItems = window._newSnapshots || popupData.snapshot.filter(r => r.status === 'SnapShot Complete');
+  const list = document.getElementById('popupList');
+  document.getElementById('popupTitle').textContent = 'New SnapShots.';
+  document.getElementById('popupCount').textContent = newItems.length + ' new since your last visit';
+  list.innerHTML = newItems.map((row, i) => `
+    <div class="popup-row" style="animation-delay:${i*0.04}s;cursor:pointer" onclick="openActionDetail('${row.id}','${rowType}')">
+      <div class="row-status-dot dot-red"></div>
+      <div class="row-info">
+        <div class="row-title">${row.title}</div>
+        <div class="row-meta">${row.by} · ${row.date}</div>
+      </div>
+      <button class="row-btn" onclick="handleRowBtn('Start ActionPlan','${row.id}','${_teamId}')">Start ActionPlan</button>
+    </div>
+  `).join('');
+  document.getElementById('popupOverlay').classList.add('visible');
+  document.getElementById('popup').classList.add('visible');
+}
+
+function handleRowBtn(btn, id, teamId, rowType) {
+  if (btn === 'View ActionPlan') { openActionDetail(id, 'actionplan'); return; }
+  if (btn === 'Start ActionPlan') {
+    closePopup();
+    closeTimeline();
+    openApPanel(teamId, id);
+  } else if (btn === 'Start ReShot') {
+    window.location.href = `/reshot.html?team=${teamId}&snapshot=${id}`;
+  } else if (btn === 'View Slides') {
+    window.open(`/snapshot-slides.html?snapshot=${id}`, '_blank');
+  } else if (btn === 'View ActionPlan') {
+    window.open(`/actionplan-slides.html?actionplan=${id}`, '_blank');
+  } else if (btn === 'View ReShot') {
+    window.open(`/reshot-slides.html?reshot=${id}`, '_blank');
+  } else if (btn === 'View') {
+    // Coming up panel — open actionplan slides
+    window.open(`/actionplan-slides.html?actionplan=${id}`, '_blank');
+  }
+}
+
+
+function openFlowPopup(type) {
+  const list = document.getElementById('popupList');
+  if (type === 'toaction') {
+    const items = popupData.snapshot.filter(r => r.status === 'SnapShot Complete');
+    document.getElementById('popupTitle').textContent = 'Awaiting ActionPlan.';
+    document.getElementById('popupCount').textContent = items.length + ' SnapShots need an ActionPlan';
+    list.innerHTML = items.map((row, i) => `
+      <div class="popup-row" style="animation-delay:${i*0.04}s;cursor:pointer" onclick="openActionDetail('${row.id}','${rowType}')">
+        <div class="row-status-dot dot-red"></div>
+        <div class="row-info">
+          <div class="row-title">${row.title}</div>
+          <div class="row-meta">${row.by} · ${row.date}</div>
+        </div>
+        <button class="row-btn" onclick="handleRowBtn('Start ActionPlan','${row.id}','${_teamId}')">Start ActionPlan</button>
+      </div>
+    `).join('');
+  } else {
+    const items = popupData.actionplan.filter(r => r.status.startsWith('Active'));
+    document.getElementById('popupTitle').textContent = 'Awaiting ReShot.';
+    document.getElementById('popupCount').textContent = items.length + ' ActionPlans need a ReShot';
+    list.innerHTML = items.map((row, i) => `
+      <div class="popup-row" style="animation-delay:${i*0.04}s;cursor:pointer" onclick="openActionDetail('${row.id}','${rowType}')">
+        <div class="row-status-dot dot-amber"></div>
+        <div class="row-info">
+          <div class="row-title">${row.title}</div>
+          <div class="row-meta">${row.by} · ${row.date}</div>
+        </div>
+        <button class="row-btn" onclick="handleRowBtn('Start ReShot','${row.id}','${_teamId}')">Start ReShot</button>
+      </div>
+    `).join('');
+  }
+  document.getElementById('popupOverlay').classList.add('visible');
+  document.getElementById('popup').classList.add('visible');
+}
+
+function openPopup(type) {
+  const data = popupData[type];
+  const list = document.getElementById('popupList');
+  document.getElementById('popupTitle').textContent = popupTitles[type];
+  document.getElementById('popupCount').textContent = data.length + ' records';
+  const groups = {
+    snapshot: [
+      { label: 'SnapShot Open', cls: 'gc-red', filter: r => r.status === 'SnapShot Complete', open: true },
+      { label: 'SnapShot Closed', cls: 'gc-grey', filter: r => r.status === 'ActionPlan Active' || r.status === 'Loop Closed', open: false },
+    ],
+    actionplan: [
+      { label: 'Active ActionPlans', cls: 'gc-amber', filter: r => r.status.startsWith('Active') || r.status === 'ReShot Due', open: true },
+      { label: 'Closed ActionPlans', cls: 'gc-grey', filter: r => r.status === 'Closed', open: false },
+    ],
+    reshot: [
+      { label: 'ReShot Due', cls: 'gc-blue', filter: r => r.status === 'ReShot Due', open: true },
+      { label: 'Completed ReShots', cls: 'gc-grey', filter: r => r.status === 'Loop Closed', open: false },
+    ]
+  };
+  list.innerHTML = (groups[type] || []).map(g => buildGroup(g.label, g.cls, data.filter(g.filter), g.open, type)).join('');
+  document.getElementById('popupOverlay').classList.add('visible');
+  document.getElementById('popup').classList.add('visible');
+}
+
+
+function openActionDetail(rowId, type) {
+  if (type === 'snapshot') {
+    const allRows = [...(popupData.snapshot||[])];
+    const row = allRows.find(r => r.id === rowId);
+    openSlidesModal(rowId, row ? row.title : rowId, _teamId);
+    return;
+  }
+  const allRows = [...(popupData.snapshot||[]),...(popupData.actionplan||[]),...(popupData.reshot||[])];
+  const row = allRows.find(r => r.id === rowId);
+  if (!row) return;
+  const snapshotId = rowId.replace(/-AP\d+$/, '').replace(/-RS\d+$/, '');
+  const tl = timelineData[snapshotId] || timelineData[rowId];
+  const liveActions = (window._liveActions || []).filter(a => {
+    const apMatch = a.action_plan_id && (a.action_plan_id === rowId || rowId.includes(a.action_plan_id) || a.action_plan_id.includes(rowId));
+    const snapMatch = a.snapshot_id && (a.snapshot_id === snapshotId || snapshotId.includes(a.snapshot_id) || a.snapshot_id.includes(snapshotId));
+    return apMatch || snapMatch;
+  });
+  console.log('rowId:', rowId, 'snapshotId:', snapshotId);
+  console.log('all actions:', JSON.stringify((window._liveActions||[]).map(a=>({ap:a.action_plan_id, snap:a.snapshot_id}))));
+  console.log('matched:', liveActions.length);
+
+  let html = `<div class="ad-header"><div class="ad-header-info"><div class="ad-snapshot-id">${row.id}</div><div class="ad-snapshot-title">${row.title}</div><div class="ad-raised">Raised by ${row.by} · ${row.date}</div></div><button class="ad-close" onclick="closeActionDetail()">✕</button></div><div class="ad-body">`;
+
+  if (type === 'actionplan') {
+    // Review date from row status e.g. "Active · Review 07/06/2026"
+    const reviewDate = row.status && row.status.includes('Review') ? row.status.split('Review ')[1] : (row.review_date || '');
+    if (reviewDate) {
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <span style="font-size:11px;font-weight:800;color:#8a94a6;text-transform:uppercase;letter-spacing:1px;">Review Date</span>
+        <span style="font-size:13px;font-weight:700;color:#2d3340;">${reviewDate}</span>
+      </div>`;
+    }
+
+    const apNote = tl && tl.steps && tl.steps[1] && tl.steps[1].note;
+    const actions = liveActions.length ? liveActions :
+      (apNote ? apNote.replace('Actions completed: ','').replace('Actions: ','').split(/[.;]/).map(s=>s.trim()).filter(Boolean).map((d,i)=>({description:d,purpose:'',owner:'',due_date:'',impact_score:'',effort_score:'',status:'Open',action_id:'ACT'+(i+1)})) : []);
+
+    if (actions.length) {
+      // Store actions for second-level card
+      window._currentCardActions = actions;
+      html += `<div style="font-size:11px;font-weight:800;color:#8a94a6;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Actions — tap for detail</div>`;
+      actions.forEach((a, i) => {
+        html += `<div class="ad-action-item" style="cursor:pointer" onclick="openActionItemDetail(${i})">
+          <div class="ad-action-num">Act ${i+1}</div>
+          <div class="ad-action-info">
+            <div class="ad-action-text">${a.description}</div>
+            ${a.owner ? `<div class="ad-action-meta">${a.owner}${a.due_date ? ' · Due ' + a.due_date : ''}</div>` : ''}
+          </div>
+          <div style="font-size:18px;color:#b0b8c4;margin-left:8px;">›</div>
+        </div>`;
+      });
+    } else {
+      html += `<div style="font-size:14px;color:#8a94a6;padding:8px 0">No actions recorded yet.</div>`;
+    }
+  } else {
+    // summary
+    if (tl && tl.summary) html += `<div style="font-size:14px;color:#2d3340;line-height:1.6;padding:4px 0 12px">${tl.summary}</div>`;
+    else html += `<div style="font-size:14px;color:#8a94a6;padding:8px 0 12px">Problem raised by ${row.by} on ${row.date}.</div>`;
+
+    // ishikawa + waste from row data or live snapshots
+    const ishikawa = row.ishikawa || '';
+    const waste = row.waste || '';
+    console.log('row fields:', JSON.stringify(row));
+    if (ishikawa || waste) {
+      html += `<div style="display:flex;gap:10px;flex-wrap:wrap;">`;
+      if (ishikawa) html += `<div style="background:rgba(74,155,127,0.08);border:1px solid rgba(74,155,127,0.18);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:#4a9b7f;">🔍 ${ishikawa}</div>`;
+      if (waste) html += `<div style="background:rgba(91,141,238,0.08);border:1px solid rgba(91,141,238,0.18);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:#3d6fd4;">♻️ ${waste}</div>`;
+      html += `</div>`;
+    }
+  }
+
+  html += `</div><div class="ad-footer">`;
+  if (type === 'snapshot') {
+    html += `<button class="ad-btn-primary" onclick="closeActionDetail();closePopup();openApPanel(_teamId,'${rowId}')">Start ActionPlan</button>`;
+    html += `<button class="ad-btn-secondary" onclick="closeActionDetail();handleRowBtn('View Slides','${rowId}','${_teamId}')">View Slides</button>`;
+  } else if (type === 'actionplan') {
+    // No button - Start ReShot lives in ReShot shape
+  } else if (type === 'reshot') {
+    const isDue = row.status === 'ReShot Due';
+    const isClosed = row.status === 'Loop Closed';
+
+    if (isDue) {
+      // Just show review date — clean and simple
+      const reviewDate = row.date || '';
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:4px 0 8px;">
+        <span style="font-size:11px;font-weight:800;color:#8a94a6;text-transform:uppercase;letter-spacing:1px;">Review Date</span>
+        <span style="font-size:13px;font-weight:700;color:#2d3340;">${reviewDate}</span>
+      </div>`;
+      html += `</div><div class="ad-footer"><button class="ad-btn-primary" onclick="closeActionDetail();closePopup();handleRowBtn('Start ReShot','${rowId}',_teamId)">Start ReShot</button><button class="ad-btn-secondary" onclick="openActionDetail('${snapshotId}','actionplan')">View ActionPlan</button></div>`;
+    } else if (isClosed) {
+      // Completed — reverse timeline
+      // Gather all cycles for this problem from live data
+      const baseId = rowId.replace(/-RS\d+$/, '').replace(/-AP\d+$/, '');
+      const allReshots = (window._liveReshots || []).filter(r => (r.snapshot_id||'').startsWith(baseId));
+      const allAPs = (window._liveAPs || []).filter(a => (a.snapshot_id||'').startsWith(baseId));
+
+      // Build reverse timeline — most recent first
+      const cycles = [];
+      // Use timelineData if live data not available
+      if (tl && tl.steps) {
+        // Reverse the steps
+        const reversed = [...tl.steps].reverse();
+        reversed.forEach((step, i) => {
+          const colors = { ReShot: '#60c0f8', ActionPlan: '#f0a500', SnapShot: '#4a9b7f', Closed: '#8a94a6' };
+          const col = colors[step.stage] || '#8a94a6';
+          const isPending = step.pending;
+          html += `<div style="position:relative;padding-left:20px;margin-bottom:${i < reversed.length-1 ? '16px' : '0'};">
+            <div style="position:absolute;left:0;top:4px;width:10px;height:10px;border-radius:50%;background:${isPending ? '#b0b8c4' : col};border:2px solid #fff;box-shadow:0 0 0 2px ${isPending ? 'rgba(45,51,64,0.1)' : col+'44'};"></div>
+            ${i < reversed.length-1 ? `<div style="position:absolute;left:4px;top:14px;width:2px;height:calc(100% + 6px);background:rgba(45,51,64,0.08);"></div>` : ''}
+            <div style="font-size:10px;font-weight:800;color:${isPending ? '#b0b8c4' : col};text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">${step.stage}</div>
+            <div style="font-size:14px;font-weight:700;color:${isPending ? '#b0b8c4' : '#2d3340'};line-height:1.3;">${step.main}</div>
+            <div style="font-size:12px;color:#8a94a6;margin-top:2px;">${step.sub||''}</div>
+            ${step.note && !isPending ? `<div style="margin-top:6px;padding:8px 12px;background:rgba(45,51,64,0.04);border-radius:8px;font-size:13px;color:#2d3340;line-height:1.5;">${step.note}</div>` : ''}
+          </div>`;
+        });
+      } else {
+        html += `<div style="font-size:14px;color:#8a94a6;">Loop closed. Full history unavailable.</div>`;
+      }
+      html += `</div>`;
+    }
+    if (!isClosed) {
+      // footer already added above for isDue
+    } else {
+      html += `<div class="ad-footer"></div>`;
+    }
+  }
+  html += `</div>`;
+
+  document.getElementById('actionDetailCard').innerHTML = html;
+  document.getElementById('actionDetailOverlay').classList.add('visible');
+}
+
+function closeActionDetail() {
+  document.getElementById('actionDetailOverlay').classList.remove('visible');
+  window._adPreviousContent = null;
+}
+
+function openActionItemDetail(idx) {
+  const action = (window._currentCardActions || [])[idx];
+  if (!action) return;
+
+  // Save current card content to go back to
+  const card = document.getElementById('actionDetailCard');
+  window._adPreviousContent = card.innerHTML;
+
+  const purposeText = action.purpose || action.Purpose || '';
+  card.innerHTML = `
+    <div class="ad-header">
+      <div class="ad-header-info">
+        <div class="ad-snapshot-id">${action.action_id || 'Action ' + (idx+1)}</div>
+        <div class="ad-snapshot-title">${action.description}</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="ad-close" onclick="adGoBack()" style="font-size:18px;">←</button>
+        <button class="ad-close" onclick="closeActionDetail()">✕</button>
+      </div>
+    </div>
+    <div class="ad-body">
+      <div style="background:rgba(74,155,127,0.08);border:1px solid rgba(74,155,127,0.18);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:11px;font-weight:800;color:#4a9b7f;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Purpose</div>
+        <div style="font-size:14px;font-weight:500;color:#2d3340;line-height:1.6;">${purposeText || 'No purpose recorded'}</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;background:rgba(255,128,64,0.10);border:1px solid rgba(255,128,64,0.2);border-radius:12px;padding:14px 16px;">
+          <div style="font-size:11px;font-weight:700;color:#cc6030;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Impact</div>
+          <div style="font-size:40px;font-weight:900;color:#cc6030;line-height:1;">${action.impact_score || '–'}</div>
+        </div>
+        <div style="flex:1;background:rgba(80,64,176,0.10);border:1px solid rgba(80,64,176,0.2);border-radius:12px;padding:14px 16px;">
+          <div style="font-size:11px;font-weight:700;color:#5040b0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Effort</div>
+          <div style="font-size:40px;font-weight:900;color:#5040b0;line-height:1;">${action.effort_score || '–'}</div>
+        </div>
+        <div style="flex:1;background:rgba(45,51,64,0.06);border:1px solid rgba(45,51,64,0.12);border-radius:12px;padding:14px 16px;">
+          <div style="font-size:11px;font-weight:700;color:#8a94a6;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Due Date</div>
+          <div style="font-size:18px;font-weight:900;color:#2d3340;line-height:1;margin-top:4px;">${action.due_date || '–'}</div>
+        </div>
+      </div>
+      ${action.owner ? `<div style="background:rgba(45,51,64,0.04);border:1px solid rgba(45,51,64,0.07);border-radius:12px;padding:12px 16px;">
+        <div style="font-size:11px;font-weight:700;color:#8a94a6;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;">Owner</div>
+        <div style="font-size:15px;font-weight:700;color:#2d3340;">${action.owner}</div>
+      </div>` : ''}
+    </div>`;
+}
+
+function adGoBack() {
+  if (window._adPreviousContent) {
+    document.getElementById('actionDetailCard').innerHTML = window._adPreviousContent;
+    window._adPreviousContent = null;
+  }
+}
+
+function closeActionItemDetail() {
+  // no-op — kept for compatibility
+}
+
+
+function openSlidesModal(rowId, title, teamId) {
+  // Find raw snapshot data
+  const row = (popupData.snapshot || []).find(r => r.id === rowId);
+  const raw = (window._liveSnapshots || []).find(s => s.id === rowId || s.snapshot_id === rowId);
+
+  let url;
+  // Use snapshot_url from sheets if available (already has data encoded)
+  const snapshotUrl = (row && row.snapshot_url) || (raw && raw.snapshot_url);
+  if (snapshotUrl) {
+    url = snapshotUrl;
+  } else {
+    // Build payload from available data
+    const src = raw || row || {};
+    const payload = {
+      problem_title: src.title || src.problem_title || title,
+      created_by: src.raised_by || src.created_by || (row ? row.by : ''),
+      current_state: src.current_state || src.currentState || '',
+      ishikawa_factors: src.ishikawa || src.ishikawa_factors || '',
+      waste_factors: src.waste || src.waste_factors || '',
+      why_this_matters: src.why_this_matters || '',
+      anttro_insight: src.anttro_insight || ''
+    };
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    url = '/snapshot-slides.html?data=' + encoded;
+  }
+
+  document.getElementById('slidesModalTitle').textContent = title;
+  document.getElementById('slidesModalId').textContent = rowId;
+  document.getElementById('slidesModalFrame').src = url;
+  const btn = document.getElementById('slidesModalApBtn');
+  btn.onclick = function() { closeSlidesModal(); closePopup(); openApPanel(teamId, rowId); };
+  document.getElementById('slidesModalOverlay').classList.add('visible');
+}
+
+function closeSlidesModal() {
+  document.getElementById('slidesModalOverlay').classList.remove('visible');
+  document.getElementById('slidesModalFrame').src = '';
+}
+
+function closePopup() {
+  document.getElementById('popupOverlay').classList.remove('visible');
+  document.getElementById('popup').classList.remove('visible');
+}
+
+// Make shapes clickable
+document.addEventListener('DOMContentLoaded', () => {
+  const nodes = document.querySelectorAll('.node');
+  const types = ['snapshot', 'actionplan', 'reshot'];
+  nodes.forEach((node, i) => {
+    node.style.cursor = 'pointer';
+    node.addEventListener('click', () => openPopup(types[i]));
+  });
+});
+
+// ── TIMELINE DATA ──
+const timelineData = {
+  'ANT-010-001': {
+    id: 'ANT-010-001', title: 'Scanner signal loss at hitch rack area',
+    summary: 'Intermittent scanner signal dropout at the hitch rack area causing picking errors and delays. Issue first noticed during morning shift on 7 May. Affects approximately 12 scans per hour.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'Aidan Soulsby raised the problem', sub: '7 May 2026 · 08:42am', note: 'Scanner drops signal every 15–20 mins at hitch rack. Causing wrong picks and double-handling. Happened 3 times on morning shift already.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Started', active: true, dot: '#f0a500', main: 'Sarah Johnson created ActionPlan ANT-010-001-AP1', sub: '8 May 2026 · 10:15am', note: 'Actions: 1. IT to check router signal strength at hitch rack. 2. Relocate scanner cradle 2m closer to router. 3. Test signal stability for 48hrs post-move.' },
+      { stage: 'ReShot', label: 'ReShot Due', active: true, dot: '#5b8dee', main: 'Review scheduled', sub: '7 Jun 2026 · Review due', note: null },
+      { stage: 'Closed', label: 'Loop Closed', active: false, dot: '#b0b8c4', main: 'Awaiting ReShot', sub: 'Not yet completed', note: null, pending: true }
+    ],
+    primaryBtn: 'View Slides', secondaryBtn: 'View ActionPlan'
+  },
+  'ANT-010-002': {
+    id: 'ANT-010-002', title: 'Bolts snapping during tightening on line 3',
+    summary: 'Multiple bolt failures during standard torque application on assembly line 3. Three separate incidents in one week. Risk of component failure downstream if unresolved.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'Tom Harris raised the problem', sub: '5 May 2026 · 02:18pm', note: 'Bolts snapping at 60% of specified torque on line 3. Third occurrence this week. Using same batch as other lines with no issues — may be a torque gun calibration problem.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Not Started', active: false, dot: '#e84444', main: 'No ActionPlan created yet', sub: '7 days since SnapShot — needs attention', note: null, urgent: true },
+      { stage: 'ReShot', label: 'ReShot', active: false, dot: '#b0b8c4', main: 'Awaiting ActionPlan', sub: 'Not yet scheduled', note: null, pending: true },
+      { stage: 'Closed', label: 'Loop Closed', active: false, dot: '#b0b8c4', main: 'Awaiting ActionPlan', sub: 'Not yet completed', note: null, pending: true }
+    ],
+    primaryBtn: 'Start ActionPlan', secondaryBtn: 'View Slides'
+  },
+  'ANT-010-003': {
+    id: 'ANT-010-003', title: 'Missing safety signage in dispatch area',
+    summary: 'Required PPE and forklift warning signs missing from three locations in dispatch. Flagged during internal safety walk. Compliance risk if not resolved before next audit.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'Emma Clarke raised the problem', sub: '12 Apr 2026 · 09:05am', note: 'PPE signage missing at dispatch bays 2, 4 and 6. Forklift crossing signs also absent near loading door. Identified during weekly safety walk.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Completed', active: true, dot: '#4a9b7f', main: 'Sarah Johnson completed ActionPlan ANT-010-003-AP1', sub: '15 Apr 2026 · 11:30am', note: 'Actions completed: New signage ordered and fitted at all 3 dispatch bays. Forklift crossing signs installed at loading door. Safety walk sign-off obtained.' },
+      { stage: 'ReShot', label: 'ReShot Completed', active: true, dot: '#4a9b7f', main: 'Sarah Johnson completed ReShot ANT-010-003-RS1', sub: '8 Jun 2026 · 03:45pm', note: 'All signage confirmed in place and undamaged. No further issues. Loop closed.' },
+      { stage: 'Closed', label: 'Loop Closed \u2713', active: true, dot: '#4a9b7f', main: 'Problem resolved and verified', sub: '8 Jun 2026', note: null }
+    ],
+    primaryBtn: 'View Slides', secondaryBtn: null
+  },
+  'ANT-010-004': {
+    id: 'ANT-010-004', title: 'Packing station layout causing bottleneck',
+    summary: 'Current packing station layout forcing operatives to cross paths, slowing output by an estimated 18% during peak hours.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'James Mills raised the problem', sub: '28 Apr 2026 · 01:10pm', note: 'Packing station layout means ops are crossing over each other constantly during peak. Estimated 18% slower than it should be.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Active', active: true, dot: '#f0a500', main: 'Sarah Johnson created ActionPlan ANT-010-004-AP1', sub: '30 Apr 2026 · 09:00am', note: 'Actions: 1. Map current vs proposed layout. 2. Trial new arrangement on night shift. 3. Measure output improvement over 5 shifts.' },
+      { stage: 'ReShot', label: 'ReShot Due', active: false, dot: '#5b8dee', main: 'Review scheduled', sub: '30 May 2026 · Coming up', note: null, pending: true },
+      { stage: 'Closed', label: 'Loop Closed', active: false, dot: '#b0b8c4', main: 'Awaiting ReShot', sub: 'Not yet completed', note: null, pending: true }
+    ],
+    primaryBtn: 'View ActionPlan', secondaryBtn: 'View Slides'
+  },
+  'ANT-010-005': {
+    id: 'ANT-010-005', title: 'Forklift bay floor markings faded',
+    summary: 'Safety floor markings in forklift bay have faded significantly, making pedestrian exclusion zones unclear. Risk of near-miss or incident if not repainted before next operational review.',
+    steps: [
+      { stage: 'SnapShot', label: 'SnapShot Submitted', active: true, dot: '#4a9b7f', main: 'Aidan Soulsby raised the problem', sub: '2 May 2026 · 07:55am', note: 'Floor markings in forklift bay are barely visible — especially the pedestrian exclusion zones. Already had one near-miss last week.' },
+      { stage: 'ActionPlan', label: 'ActionPlan Not Started', active: false, dot: '#e84444', main: 'No ActionPlan created yet', sub: '10 days since SnapShot — needs attention', note: null, urgent: true },
+      { stage: 'ReShot', label: 'ReShot', active: false, dot: '#b0b8c4', main: 'Awaiting ActionPlan', sub: 'Not yet scheduled', note: null, pending: true },
+      { stage: 'Closed', label: 'Loop Closed', active: false, dot: '#b0b8c4', main: 'Awaiting ActionPlan', sub: 'Not yet completed', note: null, pending: true }
+    ],
+    primaryBtn: 'Start ActionPlan', secondaryBtn: 'View Slides'
+  }
+};
+
+const titleToId = {
+  'Bolts snapping on line 3': 'ANT-010-002',
+  'Bolts snapping during tightening on line 3': 'ANT-010-002',
+  'Forklift bay markings faded': 'ANT-010-005',
+  'Forklift bay floor markings faded': 'ANT-010-005',
+  'Scanner signal loss at hitch rack': 'ANT-010-001',
+  'Scanner signal loss at hitch rack area': 'ANT-010-001',
+  'Packing station layout bottleneck': 'ANT-010-004',
+  'Packing station layout causing bottleneck': 'ANT-010-004',
+  'Missing safety signage in dispatch area': 'ANT-010-003',
+  'Dispatch signage check': 'ANT-010-003',
+  'Scanner signal loss \u2014 Review': 'ANT-010-001',
+  'Packing station layout review': 'ANT-010-004',
+};
+
+function openTimeline(problemId) {
+  const data = timelineData[problemId];
+  if (!data) return;
+  document.getElementById('timelineId').textContent = data.id;
+  document.getElementById('timelineTitleText').textContent = data.title;
+  let html = `<div class="problem-summary">${data.summary}</div><div class="timeline-track">`;
+  data.steps.forEach((step, i) => {
+    const pendingClass = step.pending ? ' pending' : '';
+    const labelClass = step.active && !step.pending ? ' active' : '';
+    html += `
+      <div class="timeline-step${pendingClass}" style="animation-delay:${i*0.07}s">
+        <div class="timeline-step-dot${step.active && !step.pending ? ' active' : ''}" style="background:${step.dot}"></div>
+        <div class="timeline-step-label${labelClass}">${step.stage}</div>
+        <div class="timeline-step-main">${step.main}</div>
+        <div class="timeline-step-sub">${step.sub}</div>
+        ${step.note ? `<div class="timeline-step-note">${step.note}</div>` : ''}
+      </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('timelineBody').innerHTML = html;
+  let actHtml = `<button class="tl-btn-primary" onclick="handleRowBtn('${data.primaryBtn}','${data.id}','${_teamId}')">${data.primaryBtn}</button>`;
+  if (data.secondaryBtn) actHtml += `<button class="tl-btn-secondary" onclick="handleRowBtn('${data.secondaryBtn}','${data.id}','${_teamId}')">${data.secondaryBtn}</button>`;
+  document.getElementById('timelineActions').innerHTML = actHtml;
+  document.getElementById('timelinePopup').classList.add('visible');
+}
+
+function closeTimeline() {
+  document.getElementById('timelinePopup').classList.remove('visible');
+}
+
+document.getElementById('timelineBack').addEventListener('click', closeTimeline);
+
+document.addEventListener('click', e => {
+  const rowTitle = e.target.closest('.row-title');
+  if (!rowTitle) return;
+  if (rowTitle.closest('.popup-row[onclick]')) return;
+  const titleText = rowTitle.textContent.trim();
+
+  // First try hardcoded timeline data
+  const hardcodedId = titleToId[titleText];
+  if (hardcodedId && timelineData[hardcodedId]) {
+    e.stopPropagation();
+    openTimeline(hardcodedId);
+    return;
+  }
+
+  // Then try live popup data — find matching snapshot by title
+  const match = popupData.snapshot.find(r => r.title === titleText)
+    || popupData.actionplan.find(r => r.title === titleText)
+    || popupData.reshot.find(r => r.title === titleText);
+  if (match) {
+    e.stopPropagation();
+    openLiveTimeline(match);
+  }
+});
+
+function openLiveTimeline(row) {
+  // Find the base snapshot record
+  const snap = popupData.snapshot.find(r => r.title === row.title) || row;
+  document.getElementById('timelineId').textContent = snap.id;
+  document.getElementById('timelineTitleText').textContent = snap.title;
+
+  const ap = popupData.actionplan.find(a => a.title === snap.title);
+  const rs = popupData.reshot.find(r => r.title === snap.title);
+
+  let html = `<div class="problem-summary">Raised by ${snap.by} on ${snap.date}.</div><div class="timeline-track">`;
+
+  html += `
+    <div class="timeline-step" style="animation-delay:0s">
+      <div class="timeline-step-dot active" style="background:#4a9b7f"></div>
+      <div class="timeline-step-label active">SnapShot</div>
+      <div class="timeline-step-main">${snap.by} raised the problem</div>
+      <div class="timeline-step-sub">${snap.date}</div>
+    </div>`;
+
+  if (ap) {
+    html += `
+      <div class="timeline-step" style="animation-delay:0.07s">
+        <div class="timeline-step-dot active" style="background:#f0a500"></div>
+        <div class="timeline-step-label active">ActionPlan</div>
+        <div class="timeline-step-main">${ap.by} created ${ap.id}</div>
+        <div class="timeline-step-sub">${ap.date} · ${ap.status}</div>
+      </div>`;
+  } else {
+    html += `
+      <div class="timeline-step" style="animation-delay:0.07s">
+        <div class="timeline-step-dot" style="background:#e84444"></div>
+        <div class="timeline-step-label">ActionPlan</div>
+        <div class="timeline-step-main">No ActionPlan created yet</div>
+        <div class="timeline-step-sub">Needs attention</div>
+      </div>`;
+  }
+
+  if (rs) {
+    const solved = rs.status === 'Loop Closed';
+    html += `
+      <div class="timeline-step" style="animation-delay:0.14s">
+        <div class="timeline-step-dot${solved ? ' active' : ''}" style="background:${solved ? '#4a9b7f' : '#5b8dee'}"></div>
+        <div class="timeline-step-label${solved ? ' active' : ''}">ReShot</div>
+        <div class="timeline-step-main">${rs.by} · ${rs.id}</div>
+        <div class="timeline-step-sub">${rs.date}</div>
+      </div>`;
+  } else {
+    html += `
+      <div class="timeline-step pending" style="animation-delay:0.14s">
+        <div class="timeline-step-dot" style="background:#b0b8c4"></div>
+        <div class="timeline-step-label">ReShot</div>
+        <div class="timeline-step-main">Not yet scheduled</div>
+        <div class="timeline-step-sub">Awaiting ActionPlan completion</div>
+      </div>`;
+  }
+
+  const isClosed = rs && rs.status === 'Loop Closed';
+  html += `
+    <div class="timeline-step${isClosed ? '' : ' pending'}" style="animation-delay:0.21s">
+      <div class="timeline-step-dot${isClosed ? ' active' : ''}" style="background:${isClosed ? '#4a9b7f' : '#b0b8c4'}"></div>
+      <div class="timeline-step-label${isClosed ? ' active' : ''}">Closed</div>
+      <div class="timeline-step-main">${isClosed ? 'Loop closed and verified' : 'Awaiting ReShot'}</div>
+      <div class="timeline-step-sub">${isClosed ? rs.date : 'Not yet completed'}</div>
+    </div>`;
+
+  html += `</div>`;
+  document.getElementById('timelineBody').innerHTML = html;
+
+  let btn = 'View Slides';
+  if (!ap) btn = 'Start ActionPlan';
+  else if (!rs) btn = 'Start ReShot';
+  const snapshotId = snap.id;
+  document.getElementById('timelineActions').innerHTML = `
+    <button class="tl-btn-primary" onclick="handleRowBtn('${btn}','${snapshotId}','${_teamId}')">${btn}</button>
+    <button class="tl-btn-secondary" onclick="handleRowBtn('View Slides','${snapshotId}','${_teamId}')">View Slides</button>
+  `;
+  document.getElementById('timelinePopup').classList.add('visible');
+}
+
+// ── ACTION HELPER (THE GAFFA) ──
+function toggleGaffa() {
+  const panel = document.getElementById('gaffaPanel');
+  panel.classList.toggle('visible');
+  if (panel.classList.contains('visible')) {
+    renderActionSelector();
+  }
+}
+
+function renderActionSelector() {
+  const area = document.getElementById('gaffaChatArea');
+  area.innerHTML = '';
+
+  const section = document.createElement('div');
+  section.className = 'ah-section';
+
+  const intro = document.createElement('div');
+  intro.className = 'ah-intro';
+  intro.textContent = 'Which action do you need help with? Pick one and I\'ll help you get it moving.';
+  section.appendChild(intro);
+
+  const aps = popupData.actionplan ? popupData.actionplan.filter(ap => ap.status && ap.status.startsWith('Active')) : [];
+
+  if (aps.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'font-size:13px;color:#8a94a6;text-align:center;padding:20px 0;';
+    empty.textContent = 'No open ActionPlans at the moment.';
+    section.appendChild(empty);
+    area.appendChild(section);
+    return;
+  }
+
+  let selectedAction = null;
+
+  aps.forEach(ap => {
+    const apEl = document.createElement('div');
+    apEl.className = 'ah-ap';
+
+    const header = document.createElement('div');
+    header.className = 'ah-ap-header';
+    header.innerHTML = `
+      <div>
+        <div class="ah-ap-title">${ap.title}</div>
+        <div class="ah-ap-meta">Review: ${ap.status.replace('Active · Review ', '')}</div>
+      </div>
+      <div class="ah-ap-chevron">▼</div>
+    `;
+
+    const actionsEl = document.createElement('div');
+    actionsEl.className = 'ah-ap-actions';
+
+    // Get actions for this AP from live data
+    const apActions = (window._liveActions || []).filter(a => a['Action Plan ID'] === ap.id && a['Status'] === 'Open');
+
+    if (apActions.length === 0) {
+      actionsEl.innerHTML = '<div style="font-size:12px;color:#8a94a6;padding:4px 0;">No open actions.</div>';
+    } else {
+      apActions.forEach(action => {
+        const item = document.createElement('div');
+        item.className = 'ah-action-item';
+        const cb = document.createElement('div');
+        cb.className = 'ah-action-cb';
+        const label = document.createElement('div');
+        label.innerHTML = `<div class="ah-action-label">${action['Action Description']}</div><div class="ah-action-owner">Owner: ${action['Owner'] || 'Unassigned'}</div>`;
+        item.appendChild(cb);
+        item.appendChild(label);
+        item.onclick = () => {
+          // Deselect all
+          document.querySelectorAll('.ah-action-cb').forEach(c => c.classList.remove('checked'));
+          cb.classList.add('checked');
+          selectedAction = { description: action['Action Description'], owner: action['Owner'], apTitle: ap.title };
+          helpBtn.disabled = false;
+        };
+        actionsEl.appendChild(item);
+      });
+    }
+
+    header.onclick = () => {
+      const chevron = header.querySelector('.ah-ap-chevron');
+      actionsEl.classList.toggle('open');
+      chevron.classList.toggle('open');
+    };
+
+    apEl.appendChild(header);
+    apEl.appendChild(actionsEl);
+    section.appendChild(apEl);
+  });
+
+  const helpBtn = document.createElement('button');
+  helpBtn.className = 'ah-help-btn';
+  helpBtn.textContent = 'Get help with this action';
+  helpBtn.disabled = true;
+  helpBtn.onclick = () => {
+    if (selectedAction) startActionHelp(selectedAction);
+  };
+  section.appendChild(helpBtn);
+  area.appendChild(section);
+}
+
+async function startActionHelp(action) {
+  const area = document.getElementById('gaffaChatArea');
+  area.innerHTML = '';
+
+  const back = document.createElement('button');
+  back.className = 'ah-back';
+  back.textContent = '← Back to actions';
+  back.onclick = renderActionSelector;
+  area.appendChild(back);
+
+  // Show user message
+  addGaffaMsg(area, `Help me with: ${action.description}`, true);
+
+  // Show typing
+  const typing = document.createElement('div');
+  typing.className = 'ah-msg';
+  typing.innerHTML = '<div class="ah-msg-avatar">G</div><div class="ah-msg-bubble"><div class="ah-typing"><span></span><span></span><span></span></div></div>';
+  area.appendChild(typing);
+  area.scrollTop = area.scrollHeight;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: `You are The Gaffa, a practical and knowledgeable colleague helping a manager implement a specific action from their ActionPlan. You know lean methodology and problem solving inside out but never use jargon. Be direct, practical and helpful. Give specific, actionable advice for THIS action. Keep responses short — maximum 5 points, each on its own line starting with a dash, each one a single sentence. No explanations, no extra context. Just the next steps. Never use markdown asterisks or bold. Never use long dashes. Always refer to the manager as "you" — never use their name in the response. End every response with exactly this line: "Let me know if you want me to dig deeper into any of these."`,
+        messages: [{ role: 'user', content: `I need help implementing this action: "${action.description}". It is part of an ActionPlan for this problem: "${action.apTitle}". The owner is ${action.owner || 'unassigned'}. Give me practical advice on how to get this done.` }]
+      })
+    });
+    const data = await res.json();
+    const reply = data.content[0].text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+    typing.remove();
+    addGaffaMsg(area, reply, false);
+
+    // Add free text input for follow up
+    const inputArea = document.createElement('div');
+    inputArea.className = 'ah-input-area';
+    inputArea.innerHTML = `<input class="ah-input" type="text" placeholder="Ask a follow up question..." id="ahFollowUp"/><button class="ah-send" id="ahSendBtn"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>`;
+    area.appendChild(inputArea);
+
+    const conversationHistory = [
+      { role: 'user', content: `I need help implementing this action: "${action.description}". It is part of an ActionPlan for this problem: "${action.apTitle}". The owner is ${action.owner || 'unassigned'}. Give me practical advice on how to get this done.` },
+      { role: 'assistant', content: reply }
+    ];
+
+    const sendFollowUp = async () => {
+      const input = document.getElementById('ahFollowUp');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      addGaffaMsg(area, text, true);
+      conversationHistory.push({ role: 'user', content: text });
+      const t = document.createElement('div');
+      t.className = 'ah-msg';
+      t.innerHTML = '<div class="ah-msg-avatar">G</div><div class="ah-msg-bubble"><div class="ah-typing"><span></span><span></span><span></span></div></div>';
+      area.insertBefore(t, inputArea);
+      area.scrollTop = area.scrollHeight;
+      try {
+        const r = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, system: `You are The Gaffa, a practical and knowledgeable colleague helping a manager implement a specific action. Be direct, practical and helpful. Never use markdown asterisks or bold. Never use long dashes.`, messages: conversationHistory })
+        });
+        const d = await r.json();
+        const rep = d.content[0].text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+        t.remove();
+        conversationHistory.push({ role: 'assistant', content: rep });
+        addGaffaMsg(area, rep, false);
+        area.insertBefore(inputArea, null);
+        area.scrollTop = area.scrollHeight;
+      } catch(e) { t.remove(); }
+    };
+
+    document.getElementById('ahSendBtn').onclick = sendFollowUp;
+    document.getElementById('ahFollowUp').addEventListener('keydown', e => { if (e.key === 'Enter') sendFollowUp(); });
+
+  } catch(e) {
+    typing.remove();
+    addGaffaMsg(area, 'Something went wrong. Try again.', false);
+  }
+  area.scrollTop = area.scrollHeight;
+}
+
+function addGaffaMsg(area, text, isUser) {
+  const inputArea = document.getElementById('ahFollowUp')?.closest('.gaffa-input-area');
+  const msg = document.createElement('div');
+  msg.className = 'ah-msg';
+  if (isUser) {
+    msg.style.flexDirection = 'row-reverse';
+    msg.innerHTML = `<div class="ah-msg-bubble user">${text.replace(/\n/g, '<br>')}</div>`;
+  } else {
+    msg.innerHTML = `<div class="ah-msg-avatar">G</div><div class="ah-msg-bubble">${text.replace(/\n/g, '<br>')}</div>`;
+  }
+  if (inputArea) area.insertBefore(msg, inputArea);
+  else area.appendChild(msg);
+  area.scrollTop = area.scrollHeight;
+}
+
+
+
+// ── ACTION PLAN PANEL LOGIC ──
+
+// ── ACTION PLAN PANEL CONTROLS ──
+function openApPanel(teamId, snapshotId) {
+  document.getElementById('apPanel').classList.add('visible');
+  document.getElementById('apOverlay').classList.add('visible');
+  document.getElementById('apMessages').innerHTML = '';
+  document.getElementById('apInput').value = '';
+  document.getElementById('apInput').disabled = false;
+  document.getElementById('apSendBtn').disabled = false;
+  window.ap_slidesShown = false;
+  window.ap_slidesPreviewShown = false;
+  ap_conversationComplete = false;
+  ap_currentActions = [];
+  ap_currentActionDraft = {};
+  ap_reviewDate = null;
+  ap_conversationHistory = [];
+  ap_initPanel(teamId, snapshotId);
+}
+
+function closeApPanel() {
+  document.getElementById('apPanel').classList.remove('visible');
+  document.getElementById('apOverlay').classList.remove('visible');
+}
+
+// Wire up input
+document.addEventListener('DOMContentLoaded', () => {
+  const apInput = document.getElementById('apInput');
+  const apSendBtn = document.getElementById('apSendBtn');
+  if (apInput) {
+    apInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        ap_sendMessage();
+      }
+    });
+    apInput.addEventListener('input', function() {
+      ap_autoResize(this);
+    });
+  }
+  if (apSendBtn) {
+    apSendBtn.addEventListener('click', ap_sendMessage);
+  }
+});
+
+
+
+const SYSTEM_PROMPT = `You are The Gaffa. You help managers build ActionPlans for problems raised by their team.
+
+You know lean methodology, Theory of Constraints and problem solving inside out but you never show it. To the manager you are a knowledgeable colleague who gets it, asks the right questions and helps them get things moving. You are confident, direct and straight talking. You are not a form. You are not a chatbot. You are The Gaffa.
+
+You already know the problem. You already know the manager. You never ask for information you already have.
+
+CONTEXT YOU RECEIVE AT THE START OF EVERY CONVERSATION:
+You will receive a JSON object at the start containing: managerName, problemTitle, currentState, ishikawa, waste, teamId, snapshotId.
+
+YOUR OPENING MESSAGE — always exactly this structure, with a line break between the summary and the first triage question:
+"Hi [managerName].\n\n[One sentence summary of the problem from currentState — tight, facts only].\n\n[First triage question — specific to this problem, designed to find out what the manager already knows]"
+
+No preamble. No welcome. Straight into it.
+
+YOUR CONVERSATION FLOW:
+
+Phase one — Triage.
+You have already read the SnapShot. You know the problem title, current state, Ishikawa factors and waste factors. You are a master problem solver. Use this data to ask 2 to 3 sharp, targeted questions that help you understand the problem better and get closer to what is really going on. These must be specific to THIS problem — never generic. One question at a time. Never combine questions.
+
+The goal of triage is to understand:
+- What the manager already knows that is not in the SnapShot
+- Whether any investigation or data gathering has already been done
+- What has already been tried
+- Whether this is a known cause or still unknown
+
+Based on the answers, make a judgement call:
+- If the cause is known or strongly suspected — move to fix actions
+- If the cause is unknown or data is missing — suggest a data gathering ActionPlan first
+
+After triage, synthesise what you know and tell the manager what you think is going on and what needs to happen. Be direct and confident. Frame it as your professional view, not a question. Then offer up to 3 specific suggested actions as checkboxes using the [CHECKBOX_SUGGEST] tag like this:
+
+[CHECKBOX_SUGGEST]
+- Action description one
+- Action description two
+- Action description three
+[END_CHECKBOX]
+
+Then end with: "Pick the ones that feel right and we will build them out. Or tell me if you want to go a different direction."
+
+Always give the manager the final say. They can pick suggestions, add their own, or redirect entirely.
+
+For all paths — never use the words root cause. Never push for certainty. Never claim something is definitely causing the problem. Never use lean or methodology terminology. Stay conversational and direct.
+
+For all paths — never use the words root cause. Never push for certainty. Never claim something is definitely causing the problem. The working view might be right, it might take an ActionPlan to find out, it might take two. That is fine. Just get the best actions down based on what is known right now.
+
+Phase two — Building actions.
+For each action go through these steps in order. One question at a time. Never combine questions.
+
+Step 1 — Action description.
+If the action came from a checkbox suggestion, use that description directly — do not ask for it again. If the manager is adding their own action, ask what it is. If the answer is vague do not push back with questions. Instead rewrite it into a clean specific action yourself using the context from the SnapShot, then offer it back. Example: if they say "chase it up" respond with something like "I will log that as: Chase up the IT ticket on the hitch area WiFi coverage and get a resolution date confirmed. Does that work?" One rewrite, one confirmation. Never interrogate the manager about their answer.
+
+Step 2 — Owner.
+Ask who owns this action. Free text. Could be a name, a role, a department, an external party.
+
+Step 3 — Effort and impact scores.
+Say exactly this to trigger the combined score picker: [SCORE_BOTH] "Score this action."
+
+Do not ask effort and impact as separate questions. They appear together in one bubble.
+
+Step 4 — Due date.
+Say exactly this to trigger the date picker: [DATE_DUE] "When does this need to be done by?"
+
+If actions were selected from checkboxes, build each selected action out in order without asking "want to add another?" between them. Only show the [ADD_ACTION] prompt once ALL selected checkbox actions have been built out.
+
+If no checkboxes were used, after each action say exactly: [ADD_ACTION] "Good. Want to add another action or is that everything?"
+
+Maximum 5 actions total.
+
+Phase three — Review date.
+Once all actions are confirmed say exactly this to trigger the date picker: [DATE_REVIEW] "When do you want to review this? That's when you'll ReShot it and we'll see where things are."
+
+Phase four — Summary and confirm.
+Summarise the ActionPlan back in plain English. Include the working view of the problem, all actions with owners and due dates, and the review date. Then say exactly: [CONFIRM] "Does that sound right?"
+
+Once confirmed say exactly this: "Sorted. 👊"
+
+YOUR OUTPUT:
+Once the closing message is sent generate this JSON silently as background output only. NEVER display it in the chat. NEVER show it to the user:
+
+{
+  "snapshot_id": "snapshot ID from context",
+  "team_id": "team ID from context",
+  "problem_title": "problem title from context — do not change it",
+  "created_by": "manager name from context",
+  "working_hypothesis": "STRICT MAX 200 chars. What the manager thinks is going on. If they do not know write Investigation required. Never claim this is the root cause. End cleanly.",
+  "review_date": "DD/MM/YYYY",
+  "overall_effort_score": "average of all action effort scores rounded to nearest whole number",
+  "overall_impact_score": "average of all action impact scores rounded to nearest whole number",
+  "status": "Active",
+  "actions": [
+    {
+      "action_number": 1,
+      "description": "specific action description",
+      "purpose": "inferred from action and problem context. STRICT MAX 150 chars. One sentence. Never ask for it.",
+      "owner": "person or role responsible",
+      "effort_score": 1,
+      "impact_score": 1,
+      "due_date": "DD/MM/YYYY",
+      "status": "Open"
+    }
+  ]
+}
+
+WHAT YOU NEVER DO:
+Never ask for information you already have.
+Never use the words root cause.
+Never claim certainty about what is causing the problem.
+Never use lean, six sigma, TOC or any methodology terminology.
+Never ask more than one question at a time.
+Never push the same point more than once.
+Never make the manager feel inadequate or underprepared.
+Never add actions without asking.
+Never push for more actions after the manager has said that's it.
+Never advise on how to implement an action — if asked redirect with "Once your ActionPlan is live the Gaffa on your dashboard can help with that — let's get it logged first."
+Never use long dashes, em dashes or hyphens to join sentences. Use full stops instead.
+Never use markdown formatting, asterisks or bold text in any message.
+Never use hollow filler phrases like Great, Perfect, Fantastic, Absolutely.
+Never display the JSON output in the chat window.
+Never use long dashes, formal phrasing or corporate language.
+Always make the manager feel like this is their ActionPlan and they are in control.
+
+CHARACTER LIMITS - STRICT, NEVER EXCEED:
+Action description: 80 characters maximum. Tight, specific, one clear sentence.
+Action purpose: 150 characters maximum. One or two short sentences explaining why.
+Owner: 30 characters maximum.
+Working hypothesis: 200 characters maximum.`;
+
+let ap_conversationHistory = [];
+let ap_isLoading = false;
+let ap_conversationComplete = false;
+let ap_snapshotContext = null;
+let ap_currentActions = [];
+let ap_currentActionDraft = {};
+let ap_reviewDate = null;
+
+// ── LOAD CONTEXT FROM URL + API ──
+async function ap_initPanel(teamId, snapshotId) {
+  try {
+    const res = await fetch(`/api/data?team=${teamId}`);
+    const data = await res.json();
+    const snap = data.rows?.snapshots?.find(s => s.id === snapshotId);
+
+    ap_snapshotContext = {
+      managerName: data.managerName || 'there',
+      problemTitle: snap?.title || 'the problem raised',
+      currentState: snap?.currentState || '',
+      ishikawa: snap?.ishikawa || '',
+      waste: snap?.waste || '',
+      teamId: teamId || '',
+      snapshotId: snapshotId || '',
+    };
+  } catch(e) {
+    ap_snapshotContext = {
+      managerName: 'there',
+      problemTitle: 'the problem raised',
+      currentState: '',
+      ishikawa: '',
+      waste: '',
+      teamId: teamId || '',
+      snapshotId: snapshotId || '',
+    };
+  }
+  setTimeout(() => startConversation(ap_snapshotContext), 500);
+}
+
+async function startConversation(context) {
+  window.ap_slidesShown = false;
+  window.ap_slidesPreviewShown = false;
+  ap_conversationComplete = false;
+  ap_currentActions = [];
+  ap_currentActionDraft = {};
+  ap_reviewDate = null;
+  ap_conversationHistory = [];
+
+  let opening;
+  if (context) {
+opening = `Hi ${context.managerName}.\n\n${context.problemTitle}. ${context.currentState}\n\nWhat do you know about it so far?`;
+  } else {
+    opening = "Hi. What problem are we working on today?";
+  }
+
+  const contextMessage = context
+    ? `CONTEXT: ${JSON.stringify(context)}`
+    : '';
+
+  if (contextMessage) {
+    ap_conversationHistory.push({ role: 'user', content: contextMessage });
+    ap_conversationHistory.push({ role: 'assistant', content: opening });
+  } else {
+    ap_conversationHistory.push({ role: 'assistant', content: opening });
+  }
+
+  addMessage('bot', opening);
+}
+
+function ap_autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function ap_handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function ap_getTime() {
+  return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function ap_showError(msg) {
+  const el = document.getElementById('apErrorMsg');
+  if (msg) { el.textContent = msg; el.style.display = 'block'; }
+  else { el.style.display = 'none'; }
+}
+
+function addMessage(role, content) {
+  const messages = document.getElementById('apMessages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message ' + role;
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ' + role;
+  avatar.textContent = role === 'bot' ? 'G' : 'U';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+  msg.appendChild(avatar);
+  msg.appendChild(bubble);
+  const time = document.createElement('div');
+  time.className = 'timestamp' + (role === 'user' ? ' right' : '');
+  time.textContent = ap_getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showTyping() {
+  const messages = document.getElementById('apMessages');
+  const typing = document.createElement('div');
+  typing.className = 'typing';
+  typing.id = 'typingIndicator';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const dots = document.createElement('div');
+  dots.className = 'typing-dots';
+  dots.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  typing.appendChild(avatar);
+  typing.appendChild(dots);
+  messages.appendChild(typing);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+// ── SCORE PICKER ──
+function renderScorePicker(intro, type) {
+  const messages = document.getElementById('apMessages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'score-container';
+  const introEl = document.createElement('div');
+  introEl.className = 'score-intro';
+  introEl.textContent = intro;
+  container.appendChild(introEl);
+  const optionsEl = document.createElement('div');
+  optionsEl.className = 'score-options';
+  let selected = null;
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'score-btn';
+    btn.textContent = i;
+    btn.onclick = () => {
+      optionsEl.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selected = i;
+      setTimeout(() => {
+        optionsEl.querySelectorAll('.score-btn').forEach(b => { b.disabled = true; b.style.pointerEvents = 'none'; });
+        sendUserMessage(String(i));
+        if (type === 'effort') ap_currentActionDraft.effort = i;
+        if (type === 'impact') ap_currentActionDraft.impact = i;
+      }, 300);
+    };
+    optionsEl.appendChild(btn);
+  }
+  container.appendChild(optionsEl);
+  const labels = document.createElement('div');
+  labels.className = 'score-labels';
+  labels.innerHTML = '<span>Low</span><span>High</span>';
+  container.appendChild(labels);
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = ap_getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// ── DATE PICKER ──
+function renderDatePicker(intro, type) {
+  const messages = document.getElementById('apMessages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'date-container';
+  const introEl = document.createElement('div');
+  introEl.className = 'date-intro';
+  introEl.textContent = intro;
+  container.appendChild(introEl);
+  const input = document.createElement('input');
+  input.type = 'date';
+  input.className = 'date-input';
+  input.min = new Date().toISOString().split('T')[0];
+  container.appendChild(input);
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'date-confirm';
+  confirmBtn.textContent = 'Confirm date';
+  confirmBtn.disabled = true;
+  input.onchange = () => { confirmBtn.disabled = !input.value; };
+  confirmBtn.onclick = () => {
+    if (!input.value) return;
+    const d = new Date(input.value);
+    const formatted = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const ddmmyyyy = input.value.split('-').reverse().join('/');
+    confirmBtn.disabled = true;
+    input.disabled = true;
+    confirmBtn.textContent = '✓ ' + formatted;
+    if (type === 'due') ap_currentActionDraft.dueDate = ddmmyyyy;
+    if (type === 'review') ap_reviewDate = ddmmyyyy;
+    sendUserMessage(formatted);
+  };
+  container.appendChild(confirmBtn);
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = ap_getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// ── ADD ACTION PICKER ──
+function renderAddAction(intro) {
+  const messages = document.getElementById('apMessages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'addaction-container';
+  const introEl = document.createElement('div');
+  introEl.className = 'addaction-intro';
+  introEl.textContent = intro;
+  container.appendChild(introEl);
+  const yesBtn = document.createElement('button');
+  yesBtn.className = 'addaction-btn addaction-yes';
+  yesBtn.textContent = '+ Add another action';
+  const noBtn = document.createElement('button');
+  noBtn.className = 'addaction-btn addaction-no';
+  noBtn.textContent = "That's everything";
+  const disable = () => {
+    yesBtn.disabled = true; noBtn.disabled = true;
+    yesBtn.style.pointerEvents = 'none'; noBtn.style.pointerEvents = 'none';
+  };
+  yesBtn.onclick = () => {
+    if (ap_currentActions.length >= 5) {
+      noBtn.click(); return;
+    }
+    disable();
+    // Save current draft action
+    ap_currentActions.push({...ap_currentActionDraft, action_number: ap_currentActions.length + 1});
+    ap_currentActionDraft = {};
+    sendUserMessage('Add another action');
+  };
+  noBtn.onclick = () => {
+    disable();
+    // Save current draft action
+    ap_currentActions.push({...ap_currentActionDraft, action_number: ap_currentActions.length + 1});
+    ap_currentActionDraft = {};
+    sendUserMessage("That's everything");
+  };
+  container.appendChild(yesBtn);
+  container.appendChild(noBtn);
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = ap_getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// ── CONFIRM PICKER ──
+function renderConfirm(intro) {
+  const messages = document.getElementById('apMessages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'addaction-container';
+  const introEl = document.createElement('div');
+  introEl.className = 'addaction-intro';
+  introEl.innerHTML = intro.replace(/\n/g, '<br>');
+  container.appendChild(introEl);
+  const yesBtn = document.createElement('button');
+  yesBtn.className = 'addaction-btn addaction-yes';
+  yesBtn.textContent = '✓ Looks good';
+  const noBtn = document.createElement('button');
+  noBtn.className = 'addaction-btn addaction-no';
+  noBtn.textContent = 'Change something';
+  const disable = () => {
+    yesBtn.disabled = true; noBtn.disabled = true;
+    yesBtn.style.pointerEvents = 'none'; noBtn.style.pointerEvents = 'none';
+  };
+  yesBtn.onclick = () => { disable(); sendUserMessage('Looks good'); };
+  noBtn.onclick = () => { disable(); sendUserMessage('I want to change something'); };
+  container.appendChild(yesBtn);
+  container.appendChild(noBtn);
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = ap_getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function renderCombinedScorePicker(intro) {
+  const messages = document.getElementById('apMessages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'score-container';
+
+  if (intro) {
+    const introEl = document.createElement('div');
+    introEl.className = 'score-intro';
+    introEl.textContent = intro;
+    container.appendChild(introEl);
+  }
+
+  let effortVal = null;
+  let impactVal = null;
+
+  // Effort row
+  const effortLabel = document.createElement('div');
+  effortLabel.style.cssText = 'font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;margin-top:4px;';
+  effortLabel.textContent = 'Effort — 1 being straightforward, 5 being a serious ask';
+  container.appendChild(effortLabel);
+  const effortOptions = document.createElement('div');
+  effortOptions.className = 'score-options';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'score-btn';
+    btn.textContent = i;
+    btn.onclick = () => {
+      effortOptions.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      effortVal = i;
+      ap_currentActionDraft.effort = i;
+      if (effortVal && impactVal) confirmBtn.disabled = false;
+    };
+    effortOptions.appendChild(btn);
+  }
+  container.appendChild(effortOptions);
+
+  // Impact row
+  const impactLabel = document.createElement('div');
+  impactLabel.style.cssText = 'font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;margin-top:14px;';
+  impactLabel.textContent = 'Impact — 1 being minor, 5 being a game changer';
+  container.appendChild(impactLabel);
+  const impactOptions = document.createElement('div');
+  impactOptions.className = 'score-options';
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'score-btn';
+    btn.textContent = i;
+    btn.onclick = () => {
+      impactOptions.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      impactVal = i;
+      ap_currentActionDraft.impact = i;
+      if (effortVal && impactVal) confirmBtn.disabled = false;
+    };
+    impactOptions.appendChild(btn);
+  }
+  container.appendChild(impactOptions);
+
+  // Confirm button
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'date-confirm';
+  confirmBtn.textContent = 'Confirm scores';
+  confirmBtn.disabled = true;
+  confirmBtn.style.marginTop = '14px';
+  confirmBtn.onclick = () => {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = `✓ Effort ${effortVal} · Impact ${impactVal}`;
+    effortOptions.querySelectorAll('.score-btn').forEach(b => { b.disabled = true; b.style.pointerEvents = 'none'; });
+    impactOptions.querySelectorAll('.score-btn').forEach(b => { b.disabled = true; b.style.pointerEvents = 'none'; });
+    sendUserMessage(`Effort ${effortVal}, Impact ${impactVal}`);
+  };
+  container.appendChild(confirmBtn);
+
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = ap_getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+
+function parseSuggestCheckbox(content) {
+  if (!content.includes('[CHECKBOX_SUGGEST]')) return null;
+  const introMatch = content.match(/^([\s\S]*?)\[CHECKBOX_SUGGEST\]/);
+  const intro = introMatch ? introMatch[1].trim() : '';
+  const items = [];
+  const lines = content.split('\n');
+  let inBlock = false;
+  for (const line of lines) {
+    if (line.includes('[CHECKBOX_SUGGEST]')) { inBlock = true; continue; }
+    if (line.includes('[END_CHECKBOX]')) { inBlock = false; continue; }
+    if (inBlock) {
+      const match = line.match(/^-\s+(.+)$/);
+      if (match) items.push(match[1].trim());
+    }
+  }
+  const outroMatch = content.match(/\[END_CHECKBOX\]([\s\S]*)$/);
+  const outro = outroMatch ? outroMatch[1].trim() : '';
+  return { intro, items, outro };
+}
+
+function renderSuggestCheckbox(parsed) {
+  const messages = document.getElementById('apMessages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'checkbox-container';
+
+  if (parsed.intro) {
+    const introEl = document.createElement('div');
+    introEl.className = 'checkbox-intro';
+    introEl.innerHTML = parsed.intro.replace(/\n/g, '<br>');
+    container.appendChild(introEl);
+  }
+
+  const selected = new Set();
+  parsed.items.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'checkbox-item';
+    row.onclick = () => {
+      if (selected.has(i)) { selected.delete(i); row.classList.remove('selected'); }
+      else { selected.add(i); row.classList.add('selected'); }
+      confirmBtn.disabled = selected.size === 0;
+    };
+    const box = document.createElement('div');
+    box.className = 'checkbox-box';
+    const label = document.createElement('div');
+    label.className = 'checkbox-label';
+    label.innerHTML = item;
+    row.appendChild(box);
+    row.appendChild(label);
+    container.appendChild(row);
+  });
+
+  if (parsed.outro) {
+    const outroEl = document.createElement('div');
+    outroEl.style.cssText = 'font-size:14px;color:var(--text-muted);margin-top:10px;';
+    outroEl.textContent = parsed.outro;
+    container.appendChild(outroEl);
+  }
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'checkbox-confirm';
+  confirmBtn.textContent = 'Use these actions';
+  confirmBtn.disabled = true;
+  confirmBtn.onclick = () => {
+    const selections = Array.from(selected).map(i => parsed.items[i]).join(', ');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = '✓ Done';
+    container.querySelectorAll('.checkbox-item').forEach(r => r.style.pointerEvents = 'none');
+    sendUserMessage(selections);
+  };
+  container.appendChild(confirmBtn);
+
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = ap_getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+
+function parseSpecialTags(reply) {
+  if (reply.includes('[SCORE_BOTH]')) {
+    const intro = reply.replace('[SCORE_BOTH]', '').trim();
+    return { type: 'score_both', intro };
+  }
+  if (reply.includes('[SCORE_EFFORT]')) {
+    const intro = reply.replace('[SCORE_EFFORT]', '').trim();
+    return { type: 'score_effort', intro };
+  }
+  if (reply.includes('[SCORE_IMPACT]')) {
+    const intro = reply.replace('[SCORE_IMPACT]', '').trim();
+    return { type: 'score_impact', intro };
+  }
+  if (reply.includes('[DATE_DUE]')) {
+    const intro = reply.replace('[DATE_DUE]', '').trim();
+    return { type: 'date_due', intro };
+  }
+  if (reply.includes('[DATE_REVIEW]')) {
+    const intro = reply.replace('[DATE_REVIEW]', '').trim();
+    return { type: 'date_review', intro };
+  }
+  if (reply.includes('[ADD_ACTION]')) {
+    const intro = reply.replace('[ADD_ACTION]', '').trim();
+    return { type: 'add_action', intro };
+  }
+  if (reply.includes('[CONFIRM]')) {
+    const intro = reply.replace('[CONFIRM]', '').trim();
+    return { type: 'confirm', intro };
+  }
+  return null;
+}
+
+function showLoadingAnimation() {
+  const messages = document.getElementById('apMessages');
+  const loadingGroup = document.createElement('div');
+  loadingGroup.className = 'message-group';
+  loadingGroup.id = 'apLoadingGroup';
+  const loadingMsg = document.createElement('div');
+  loadingMsg.className = 'message bot';
+  const loadingAvatar = document.createElement('div');
+  loadingAvatar.className = 'avatar bot';
+  loadingAvatar.textContent = 'G';
+  const loadingContainer = document.createElement('div');
+  loadingContainer.className = 'loading-container';
+  loadingContainer.innerHTML = '<div class="loading-text">ActionPlan generating...</div><div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+  loadingMsg.appendChild(loadingAvatar);
+  loadingMsg.appendChild(loadingContainer);
+  loadingGroup.appendChild(loadingMsg);
+  messages.appendChild(loadingGroup);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeLoadingAnimation() {
+  const lg = document.getElementById('apLoadingGroup');
+  if (lg) lg.remove();
+}
+
+
+function showSlidePreview() {
+  if (window.ap_slidesPreviewShown) return;
+  window.ap_slidesPreviewShown = true;
+  const messages = document.getElementById('apMessages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'slides-container';
+  const header = document.createElement('div');
+  header.className = 'slides-header';
+  header.textContent = 'Your ActionPlan is ready. Preview your slides then submit to save it. 👊';
+  container.appendChild(header);
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'slides-btn slides-btn-submit';
+  submitBtn.textContent = '✓ Submit ActionPlan';
+  submitBtn.onclick = async () => {
+    submitBtn.textContent = 'Submitting...';
+    submitBtn.disabled = true;
+    await submitToMake();
+    closeApPanel(); if (typeof loadDashboardData === 'function') loadDashboardData();
+  };
+  container.appendChild(submitBtn);
+  const previewBtn = document.createElement('button');
+  previewBtn.className = 'slides-btn slides-btn-download';
+  previewBtn.textContent = '👁️ Preview ActionPlan Slides';
+  previewBtn.onclick = () => {
+    if (window.ap_currentActionPlanData) {
+      sessionStorage.setItem('anttro_actionplan', JSON.stringify(window.ap_currentActionPlanData));
+    }
+    window.open('/actionplan-slides.html', '_blank');
+  };
+  container.appendChild(previewBtn);
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = ap_getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+  document.getElementById('apInput').disabled = true;
+  document.getElementById('apSendBtn').disabled = true;
+}
+
+async function extractAndSendJSON(replyText) {
+  showLoadingAnimation();
+  try {
+    const jsonResponse = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        system: 'You are a data extraction assistant. Based on the conversation provided, generate ONLY a valid JSON object with these exact fields: snapshot_id, team_id, problem_title, created_by, working_hypothesis, review_date (DD/MM/YYYY), overall_effort_score (number), overall_impact_score (number), status, actions (array of objects each with: action_number, description, purpose, owner, effort_score, impact_score, due_date DD/MM/YYYY, status). For purpose — infer why this action makes sense from the action description and problem context. STRICT MAX 150 chars, one short sentence, never ask for it. Return only the JSON object, nothing else. No markdown, no backticks.',
+        messages: [...ap_conversationHistory, { role: 'user', content: 'Generate the JSON output for this ActionPlan conversation now.' }]
+      })
+    });
+    const jsonData = await jsonResponse.json();
+    const jsonText = jsonData.content[0].text;
+    const parsed = JSON.parse(jsonText.replace(/```json|```/g, '').trim());
+
+    // Generate ActionPlan ID from snapshot ID
+    const snapshotId = ap_snapshotContext?.snapshotId || parsed.snapshot_id || '';
+    parsed.action_plan_id = snapshotId ? `${snapshotId}-AP1` : '';
+    parsed.snapshot_id = snapshotId;
+    parsed.team_id = ap_snapshotContext?.teamId || parsed.team_id || '';
+    parsed.date_created = new Date().toLocaleDateString('en-GB');
+    parsed.status = 'Active';
+    parsed.type = 'actionplan';
+
+    // Add action IDs
+    if (parsed.actions) {
+      parsed.actions = parsed.actions.map((a, i) => ({
+        ...a,
+        action_id: `${parsed.action_plan_id}-ACT${i + 1}`,
+        action_plan_id: parsed.action_plan_id,
+        snapshot_id: parsed.snapshot_id,
+        team_id: parsed.team_id,
+        status: 'Open',
+      }));
+    }
+
+    window.ap_currentActionPlanData = parsed;     sessionStorage.setItem('anttro_actionplan', JSON.stringify(parsed));
+  } catch(err) {
+    console.error('JSON extraction error:', err);
+  }
+  removeLoadingAnimation();
+  // Show slides first — Make webhook fires on submit
+  showSlidePreview();
+}
+
+async function submitToMake() {
+  if (!window.ap_currentActionPlanData) return;
+  try {
+    await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'send_to_make', data: window.ap_currentActionPlanData })
+    });
+  } catch(e) {
+    console.error('Make webhook error:', e);
+  }
+}
+
+function sendUserMessage(text) {
+  addMessage('user', text);
+  ap_conversationHistory.push({ role: 'user', content: text });
+  sendToAPI();
+}
+
+async function sendToAPI() {
+  ap_showError('');
+  ap_isLoading = true;
+  document.getElementById('apSendBtn').disabled = true;
+  showTyping();
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: ap_conversationHistory
+      })
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API request failed');
+    }
+    const data = await response.json();
+    const reply = data.content[0].text;
+    ap_conversationHistory.push({ role: 'assistant', content: reply });
+    removeTyping();
+
+    // Strip JSON from display
+    let cleanReply = reply
+      .replace(/```json[\s\S]*?```/g, '')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/\{[\s\S]*"actions"[\s\S]*\}/g, '')
+      .trim();
+
+    // Check for suggestion checkboxes
+    const suggestParsed = parseSuggestCheckbox(cleanReply);
+    if (suggestParsed) {
+      // Show intro text first if there is any
+      renderSuggestCheckbox(suggestParsed);
+    } else {
+      // Check for special tags
+      const special = parseSpecialTags(cleanReply);
+    if (special) {
+      const introText = special.intro.replace(/\[.*?\]/g, '').trim();
+      if (special.type === 'score_both') renderCombinedScorePicker(introText);
+      else if (special.type === 'score_effort') renderScorePicker(introText, 'effort');
+      else if (special.type === 'score_impact') renderScorePicker(introText, 'impact');
+      else if (special.type === 'date_due') renderDatePicker(introText, 'due');
+      else if (special.type === 'date_review') renderDatePicker(introText, 'review');
+      else if (special.type === 'add_action') renderAddAction(introText);
+      else if (special.type === 'confirm') renderConfirm(introText);
+    } else if (cleanReply && !reply.includes('Sorted. 👊')) {
+      addMessage('bot', cleanReply);
+    }
+    }
+
+    if (reply.includes('Sorted. 👊') && !window.ap_slidesShown) {
+      ap_conversationComplete = true;
+      window.ap_slidesShown = true;
+      document.getElementById('apInput').disabled = true;
+      document.getElementById('apSendBtn').disabled = true;
+      addMessage('bot', 'Sorted. 👊');
+      await extractAndSendJSON(reply);
+    }
+
+  } catch(err) {
+    removeTyping();
+    ap_showError('Something went wrong: ' + err.message);
+    ap_conversationHistory.pop();
+  }
+  ap_isLoading = false;
+  if (!ap_conversationComplete) {
+    document.getElementById('apSendBtn').disabled = false;
+  }
+}
+
+async function ap_sendMessage() {
+  const input = document.getElementById('apInput');
+  const text = input.value.trim();
+  if (!text || ap_isLoading || ap_conversationComplete) return;
+  input.value = '';
+  input.style.height = 'auto';
+  addMessage('user', text);
+  ap_conversationHistory.push({ role: 'user', content: text });
+  await sendToAPI();
+}
+
+
+
+</script>
+<!-- GAFFA BUTTON -->
+<button class="gaffa-btn" onclick="toggleGaffa()">
+  <div class="gaffa-btn-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4.5 6.5V17a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+  </div>
+  <div class="gaffa-btn-text">
+    <span class="gaffa-btn-label">The Gaffa.</span>
+    <span class="gaffa-btn-sub">Stuck on an action? I can help.</span>
+  </div>
+</button>
+
+<!-- ACTION PLAN PANEL OVERLAY -->
+<div class="ap-overlay" id="apOverlay" onclick="closeApPanel()"></div>
+
+<!-- ACTION PLAN PANEL -->
+<div class="ap-panel" id="apPanel">
+  <div class="ap-panel-header">
+    <div class="ap-panel-title">
+      <div class="ap-panel-name">The Gaffa.</div>
+      <div class="ap-panel-sub">ActionPlan Builder</div>
+    </div>
+    <button class="ap-panel-close" onclick="closeApPanel()">✕</button>
+  </div>
+  <div id="apErrorMsg" class="error-msg" style="display:none;margin:0 16px;"></div>
+  <div class="ap-messages" id="apMessages"></div>
+  <div class="ap-input-area">
+    <div class="ap-input-wrapper">
+      <textarea class="ap-textarea" id="apInput" placeholder="Type your message..." rows="1"></textarea>
+      <button class="ap-send-btn" id="apSendBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
