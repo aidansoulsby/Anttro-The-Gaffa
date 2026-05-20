@@ -1409,6 +1409,7 @@ async function loadDashboardData() {
     popupData.snapshot = enrichedSnapshots;
     popupData.actionplan = rows.actionplans;
     popupData.reshot = rows.reshots;
+    window._needsAttention = data.needsAttention || [];
     window._liveActions = data.actions || [];
     window._newSnapshots = newSnapshots;
     daily = chart.daily; weekly = chart.weekly; monthly = chart.monthly;
