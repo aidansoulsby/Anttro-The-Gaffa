@@ -1672,7 +1672,7 @@ function openFlowPopup(type) {
       </div>
     `).join('');
   } else {
-    const _t = new Date(); _t.setHours(0,0,0,0); const items = popupData.actionplan.filter(r => { if (r.status === 'Closed') return false; if (!r.reviewDate) return false; const p = r.reviewDate.split('/'); if (p.length !== 3) return false; const rd = new Date(p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0')); return rd <= _t; });
+    const items = (window._needsAttention || []).filter(r => r.type === 'overdue').map(r => popupData.actionplan.find(a => a.id === r.id)).filter(Boolean);
     document.getElementById('popupTitle').textContent = 'Awaiting ReShot.';
     document.getElementById('popupCount').textContent = items.length + ' ActionPlans need a ReShot';
     list.innerHTML = items.map((row, i) => `
