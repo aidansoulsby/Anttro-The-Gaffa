@@ -1522,7 +1522,7 @@ function buildGroup(label, countClass, rows, defaultOpen, rowType) {
       ${(() => {
         if (rowType !== 'actionplan') return '';
         const reviewMatch = (row.status||'').match(/Review (.+)/);
-        const reviewStr = reviewMatch ? reviewMatch[1].trim() : '';
+        const reviewStr = reviewMatch ? reviewMatch[1].trim() : (row.reviewDate || '');
         const parts = reviewStr.split('/');
         let diffBlock = '';
         if (parts.length === 3) {
