@@ -188,6 +188,7 @@ module.exports = async (req, res) => {
         date: apDateFormatted,
         status, badge, dot, btn,
         slidesLink: r['Slides Link'] || null,
+        reviewDate: r['Review Date'] || '',
       };
     });
 
