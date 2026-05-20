@@ -1395,7 +1395,7 @@ async function loadDashboardData() {
     document.getElementById('num-actionplan').textContent = stats.totalActionPlans;
     document.getElementById('num-reshot').textContent = stats.totalReshots;
     document.getElementById('fb-toaction').textContent = (rows.snapshots || []).filter(r => r.status === 'SnapShot Complete').length;
-    const _today = new Date(); _today.setHours(0,0,0,0); const _overdueReshots = (rows.actionplans || []).filter(r => { if (!r.reviewDate) return false; const p = r.reviewDate.split('/'); if (p.length !== 3) return false; const rd = new Date(p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0')); return rd <= _today && r.status !== 'Closed'; }).length; document.getElementById('fb-toreview').textContent = _overdueReshots;
+    document.getElementById('fb-toreview').textContent = (data.needsAttention || []).filter(r => r.type === 'overdue').length;
     document.getElementById('stat-loops').textContent = stats.loopsClosed;
     document.getElementById('stat-avg').textContent = stats.avgDaysToClose ? `${Math.abs(stats.avgDaysToClose)} days` : '—';
     document.getElementById('stat-month').textContent = stats.closedThisMonth;
