@@ -205,6 +205,8 @@ module.exports = async (req, res) => {
         dot: solved ? 'dot-grey' : 'dot-blue',
         btn: solved ? 'View ReShot' : 'Start ReShot',
         slidesLink: r['Slides Link'] || null,
+        problemSolved: r['Problem Solved?'] || '',
+        actionsSummary: r['Actions Summary'] || '',
       };
     });
 
