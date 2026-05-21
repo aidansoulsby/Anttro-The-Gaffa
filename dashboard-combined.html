@@ -1672,7 +1672,7 @@ function openFlowPopup(type) {
     }
     if (reshotItems.length > 0) {
       html += `<div class="popup-group-header"><div class="group-label"><div class="group-count gc-amber">${reshotItems.length}</div>Back in the Loop</div></div>`;
-      html += reshotItems.map((row, i) => `<div class="popup-row" style="animation-delay:${i*0.04}s;background:rgba(240,165,0,0.04);border-left:3px solid rgba(240,165,0,0.3);cursor:pointer" onclick="openActionDetail('${row.id}','reshot')"><div class="row-status-dot dot-amber"></div><div class="row-info"><div class="row-title">${row.title}</div><div class="row-meta">${row.by} · ${row.date}</div></div><button class="row-btn" onclick="event.stopPropagation();openApPanel('${_teamId}','${row.snapshotId || row.id}','${(row.actionsSummary||'').replace(/'/g,"\\'")}")">Start New ActionPlan</button></div>`).join('');
+      html += reshotItems.map((row, i) => `<div class="popup-row" style="animation-delay:${i*0.04}s;background:rgba(240,165,0,0.04);border-left:3px solid rgba(240,165,0,0.3);cursor:pointer" onclick=""><div class="row-status-dot dot-amber"></div><div class="row-info"><div class="row-title">${row.title}</div><div class="row-meta">${row.by} · ${row.date}</div></div><button class="row-btn" onclick="event.stopPropagation();openApPanel('${_teamId}','${row.snapshotId || row.id}','${(row.actionsSummary||'').replace(/'/g,"\\'")}")">Start New ActionPlan</button></div>`).join('');
     }
     list.innerHTML = html;
   } else {
