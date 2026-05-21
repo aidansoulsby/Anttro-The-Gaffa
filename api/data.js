@@ -207,6 +207,7 @@ module.exports = async (req, res) => {
         slidesLink: r['Slides Link'] || null,
         problemSolved: r['Problem Solved?'] || '',
         actionsSummary: r['Actions Summary'] || '',
+        snapshotId: r['Snapshot ID'] || '',
       };
     });
 
