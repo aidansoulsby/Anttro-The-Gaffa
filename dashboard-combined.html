@@ -1810,7 +1810,6 @@ function openActionDetail(rowId, type) {
   } else {
     // summary
     if (tl && tl.summary) html += `<div style="font-size:14px;color:#2d3340;line-height:1.6;padding:4px 0 12px">${tl.summary}</div>`;
-    else html += `<div style="font-size:14px;color:#8a94a6;padding:8px 0 12px">Problem raised by ${row.by} on ${row.date}.</div>`;
 
     // ishikawa + waste from row data or live snapshots
     const ishikawa = row.ishikawa || '';
