@@ -3996,7 +3996,7 @@ function rs_showConfetti() {
       ctx.restore();
     });
     frame++;
-    if (frame < 300) requestAnimationFrame(draw);
+    if (pieces.some(p => p.y < canvas.height + 20)) requestAnimationFrame(draw);
     else canvas.remove();
   }
   draw();
