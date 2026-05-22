@@ -1830,7 +1830,7 @@ function openActionDetail(rowId, type) {
   } else if (type === 'actionplan') {
     html += `<button class="ad-btn-primary" onclick="closeActionDetail();closePopup();handleRowBtn('Start ReShot','${rowId}',_teamId)">Start ReShot</button>`;
   } else if (type === 'reshot') {
-    const loopClosed = row.status === 'Loop Closed' || row.problemSolved === 'Yes';
+    const loopClosed = row.status === 'Loop Closed' || row.problemSolved === 'Yes'; if (loopClosed) setTimeout(() => rs_showConfetti(), 300);
     const actionsSummary = row.actionsSummary || row.actions_summary || '';
     const completedBy = row.by || '';
     const dateCompleted = row.date || '';
