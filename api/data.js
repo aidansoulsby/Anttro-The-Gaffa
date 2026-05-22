@@ -189,6 +189,7 @@ module.exports = async (req, res) => {
         status, badge, dot, btn,
         slidesLink: r['Slides Link'] || null,
         reviewDate: r['Review Date'] || '',
+        valueCategory: r['Value Category'] || '',
       };
     });
 
