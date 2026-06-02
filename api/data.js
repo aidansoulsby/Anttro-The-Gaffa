@@ -212,6 +212,7 @@ module.exports = async (req, res) => {
         problemSolved: r['Problem Solved?'] || '',
         actionsSummary: r['Actions Summary'] || '',
         snapshotId: r['Snapshot ID'] || '',
+        rawStatus: r['Status'] || '',
       };
     });
 
