@@ -1840,10 +1840,7 @@ function openActionDetail(rowId, type) {
   const liveActions = (window._liveActions || []).filter(a => {
     // API returns raw sheet headers e.g. 'Action Plan ID', 'Snapshot ID'
     const ap = a['Action Plan ID'] || a.action_plan_id || '';
-    const snap = a['Snapshot ID'] || a.snapshot_id || '';
-    const apMatch = ap && (ap === rowId || rowId.includes(ap) || ap.includes(rowId));
-    const snapMatch = snap && (snap === snapshotId || snapshotId.includes(snap) || snap.includes(snapshotId));
-    return apMatch || snapMatch;
+    return ap === rowId;
   });
 
   let html = `<div class="ad-header"><div class="ad-header-info"><div class="ad-snapshot-id">${row.id}</div><div class="ad-snapshot-title">${row.title}</div><div class="ad-raised">Raised by ${row.by} · ${row.date}</div></div><button class="ad-close" onclick="closeActionDetail()">✕</button></div><div class="ad-body">`;
