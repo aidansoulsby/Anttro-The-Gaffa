@@ -236,7 +236,7 @@ html, body { display:flex; flex-direction:column; overflow:hidden; }
 .tooltip.visible { opacity:1; }
 
 /* ── ACTION PLAN PANEL CHAT STYLES ── */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } } @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.45; } 30% { transform: translateY(-5px); opacity: 1; } }
 .ap-panel .message-group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 14px; }
 .ap-panel .message { display: flex; gap: 10px; align-items: flex-end; animation: fadeUp 0.25s ease forwards; opacity: 0; }
 .ap-panel .message.user { flex-direction: row-reverse; }
