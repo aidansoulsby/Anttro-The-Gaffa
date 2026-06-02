@@ -169,7 +169,7 @@ module.exports = async (req, res) => {
     const actionplanRows = actionplansData.map(r => {
       const rs = reshotsData.find(x => x['Action Plan ID'] === r['Action Plan ID']);
       let status, badge, dot, btn;
-      if (rs && rs['Problem Solved?'] === 'Yes') {
+      if (r['Status'] === 'Closed') {         status = 'Closed'; badge = 'badge-cl'; dot = 'dot-grey'; btn = 'View ActionPlan';       } else if (rs && rs['Problem Solved?'] === 'Yes') {
         status = 'Closed'; badge = 'badge-cl'; dot = 'dot-grey'; btn = 'View ActionPlan';
       } else if (r['Status'] === 'Requires New ActionPlan') {
         status = 'Requires New ActionPlan'; badge = 'badge-rs'; dot = 'dot-blue'; btn = 'Start ActionPlan';
