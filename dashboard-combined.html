@@ -4125,7 +4125,7 @@ async function rs_confirm(loopClosed) {
     team_id: rs_context.teamId,
     completed_by: rs_context.managerName,
     problem_solved: loopClosed ? 'Yes' : 'No',
-    actions_summary: actionsSummary,
+    actions_summary: actionsSummary.join(' | '),
     date_completed: new Date().toLocaleDateString('en-GB'),
     status: loopClosed ? 'Loop Closed' : 'Requires New ActionPlan',
   };
