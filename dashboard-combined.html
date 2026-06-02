@@ -1645,6 +1645,11 @@ const popupData = {
 
 const popupTitles = { snapshot:'SnapShot.', actionplan:'ActionPlan.', reshot:'ReShot.' };
 
+function openReShotDetail(apId) {
+  const snapshotId = apId.replace(/-AP\d+$/, '');
+  const rsRow = (popupData.reshot || []).find(r => r.snapshotId === snapshotId || (r.id || '').startsWith(snapshotId));
+  if (rsRow) openActionDetail(rsRow.id, 'reshot');
+}  
 function buildGroup(label, countClass, rows, defaultOpen, rowType) {
   if (!rows.length) return '';
   const id = 'grp-' + Math.random().toString(36).slice(2);
