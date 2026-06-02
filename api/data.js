@@ -134,7 +134,7 @@ module.exports = async (req, res) => {
 
     // ── SNAPSHOT POPUP ROWS ──
     const snapshotRows = snapshotsData.map(r => {
-      const ap = actionplansData.find(a => a['Snapshot ID'] === r['Snapshot ID']);
+      const ap = actionplansData.filter(a => a['Snapshot ID'] === r['Snapshot ID']).sort((a,b) => (b['Action Plan ID']||'').localeCompare(a['Action Plan ID']||''))[0];
       const rs = reshotsData.find(x => x['Snapshot ID'] === r['Snapshot ID']);
       let status, badge, dot, btn;
       if (rs && rs['Problem Solved?'] === 'Yes') {
