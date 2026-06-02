@@ -3585,7 +3585,7 @@ async function extractAndSendJSON(replyText) {
     parsed.team_id = ap_snapshotContext?.teamId || parsed.team_id || '';
     parsed.date_created = new Date().toLocaleDateString('en-GB');
     parsed.status = 'Active';
-    parsed.type = 'actionplan';
+    parsed.type = 'actionplan';     parsed.previous_action_plan_id = ap_snapshotContext?.previousApId || '';
     parsed.value_category = window.ap_currentData?.value_category || '';
 
     // Add action IDs
