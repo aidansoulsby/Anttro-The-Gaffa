@@ -3580,7 +3580,7 @@ async function extractAndSendJSON(replyText) {
 
     // Generate ActionPlan ID from snapshot ID
     const snapshotId = ap_snapshotContext?.snapshotId || parsed.snapshot_id || '';
-    parsed.action_plan_id = snapshotId ? `${snapshotId}-AP1` : '';
+    const existingAPs = (popupData.actionplan || []).filter(a => a.id && a.id.startsWith(snapshotId)); const cycleNum = existingAPs.length + 1; parsed.action_plan_id = snapshotId ? `${snapshotId}-AP${cycleNum}` : '';
     parsed.snapshot_id = snapshotId;
     parsed.team_id = ap_snapshotContext?.teamId || parsed.team_id || '';
     parsed.date_created = new Date().toLocaleDateString('en-GB');
