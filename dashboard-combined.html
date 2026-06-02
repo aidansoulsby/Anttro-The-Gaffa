@@ -2792,7 +2792,7 @@ let ap_currentActionDraft = {};
 let ap_reviewDate = null;
 
 // ── LOAD CONTEXT FROM URL + API ──
-async function ap_initPanel(teamId, snapshotId, reshotContext) {
+async function ap_initPanel(teamId, snapshotId, reshotContext, previousApId) {
   try {
     const res = await fetch(`/api/data?team=${teamId}`);
     const data = await res.json();
@@ -4147,7 +4147,7 @@ async function rs_confirm(loopClosed) {
     rs_addMsg('Sorted. 👊', true, 400);
     if (typeof loadDashboardData === 'function') setTimeout(loadDashboardData, 1500);
     rs_renderChoice('Not everything resolved — start a new ActionPlan now to keep the momentum going.', [
-      { label: 'Start New ActionPlan', cls: 'rs-choice-yes', action: () => { closeRsPanel(); const rsSummary = Object.values(rs_results).map(r => (r.outcome==='yes'?'✅ ':r.outcome==='partially'?'🔶 ':'❌ ')+r.desc+(r.reason?' — '+r.reason:'')).join('. '); openApPanel(rs_context.teamId, rs_context.snapshotId, rsSummary); } },
+      { label: 'Start New ActionPlan', cls: 'rs-choice-yes', action: () => { closeRsPanel(); const rsSummary = Object.values(rs_results).map(r => (r.outcome==='yes'?'✅ ':r.outcome==='partially'?'🔶 ':'❌ ')+r.desc+(r.reason?' — '+r.reason:'')).join('. '); openApPanel(rs_context.teamId, rs_context.snapshotId, rsSummary, rs_context.actionPlanId); } },
       { label: 'I\'ll do it later', cls: 'rs-choice-no', action: () => closeRsPanel() },
     ], 1200);
   }
