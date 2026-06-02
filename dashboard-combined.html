@@ -1939,7 +1939,7 @@ function openActionDetail(rowId, type) {
     const actionsSummary = row.actionsSummary || row.actions_summary || '';
     const completedBy = row.by || '';
     const dateCompleted = row.date || '';
-    const actionLines = actionsSummary ? actionsSummary.split('. ').filter(s => s.trim().length > 0) : [];
+    const actionLines = actionsSummary ? actionsSummary.split(' | ').filter(s => s.trim().length > 0) : [];
     const gradCol = loopClosed ? 'rgba(74,155,127,0.5)' : 'rgba(240,165,0,0.4)';
     const pillCol = loopClosed ? '#7ec8b0' : '#f0a500';
     const pillBg = loopClosed ? 'rgba(74,155,127,0.2)' : 'rgba(240,165,0,0.2)';
