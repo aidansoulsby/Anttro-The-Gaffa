@@ -1976,7 +1976,7 @@ function openActionDetail(rowId, type) {
     </div>`;
     html += `</div><div class="ad-footer" style="margin-top:-6px;">`;
     if (!loopClosed) {
-      html += `<button class="ad-btn-primary" onclick="closeActionDetail();closePopup();openApPanel(_teamId,'${snapshotId}','${(row.actionsSummary||'').replace(/'/g,'')}')">Start New ActionPlan</button>`;
+      const prevApId = (popupData.actionplan||[]).find(a => a.id && a.id.startsWith(snapshotId) && a.status === 'Requires New ActionPlan')?.id || ''; html += `<button class="ad-btn-primary" onclick="closeActionDetail();closePopup();openApPanel(_teamId,'${snapshotId}','${(row.actionsSummary||'').replace(/'/g,'')}','${prevApId}')">Start New ActionPlan</button>`;
     }
     html += `</div>`;
   }
