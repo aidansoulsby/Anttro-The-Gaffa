@@ -317,6 +317,7 @@ module.exports = async (req, res) => {
     const teamName = teamRow ? teamRow['Team Name'] : null;
     const managerName = teamRow ? teamRow['Contact Name'] : null;
 
+   res.setHeader('Cache-Control', 'no-store, max-age=0');
     res.status(200).json({
       teamName,
       managerName,
