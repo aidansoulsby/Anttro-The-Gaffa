@@ -345,7 +345,7 @@ module.exports = async (req, res) => {
       },
       actions: teamId ? actions.filter(r => r['Team ID'] === teamId) : actions,
       newSnapshots: snapshotRows.filter(r => r.status === 'SnapShot Complete'),
-      needsNewAP: reshotRows.filter(r => r.problemSolved === 'No' || r.status === 'Requires New ActionPlan'),
+      needsNewAP: reshotRows.filter(r => (r.problemSolved === 'No' || r.status === 'Requires New ActionPlan') && r.rawStatus !== 'Closed'),
       needsAttention,
       comingUp,
       insight,
