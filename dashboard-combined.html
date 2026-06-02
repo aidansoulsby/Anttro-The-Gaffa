@@ -1811,7 +1811,6 @@ function openPopup(type) {
     ],
     actionplan: [
       { label: 'Active ActionPlans', cls: 'gc-amber', filter: r => (r.status.startsWith('Active') || r.status === 'ReShot Due') && r.status !== 'Requires New ActionPlan', open: true },
-      { label: 'Back in the Loop', cls: 'gc-amber', filter: r => r.status === 'Requires New ActionPlan', open: true },
       { label: 'Closed ActionPlans', cls: 'gc-grey', filter: r => r.status === 'Closed', open: false },
     ],
     reshot: [
