@@ -2834,7 +2834,7 @@ async function startConversation(context) {
 
   let opening;
   if (context && context.reshotContext) {
-    const reshotLines = context.reshotContext.split('. ').filter(s => s.trim().length > 5).map(s => { const t = s.trim(); const em = t.toLowerCase().includes('made a difference') || t.toLowerCase().includes('closed') ? '✅' : t.toLowerCase().includes('partially') ? '🔶' : '❌'; return em + ' ' + t; }).join('\n');
+    const reshotLines = context.reshotContext.split(' | ').filter(s => s.trim().length > 5).map(s => { const t = s.trim(); const em = t.toLowerCase().includes('made a difference') || t.toLowerCase().includes('closed') ? '✅' : t.toLowerCase().includes('partially') ? '🔶' : '❌'; return em + ' ' + t; }).join('\n');
     opening = `Hi ${context.managerName}. 👋\n\n🔄 ${context.problemTitle}\n\nWe tried to fix this before — here's what happened:\n\n${reshotLines}\n\nLet's dig deeper. What do you think got in the way?`;
   } else if (context) {
     opening = `Hi ${context.managerName}. 👋\n\n📋 ${context.problemTitle}\n\n${context.currentState}\n\nWhat do you know about it so far?`;
