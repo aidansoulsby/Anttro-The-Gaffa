@@ -2602,7 +2602,7 @@ function addGaffaMsg(area, text, isUser) {
 // ── ACTION PLAN PANEL LOGIC ──
 
 // ── ACTION PLAN PANEL CONTROLS ──
-function openApPanel(teamId, snapshotId, reshotContext) {
+function openApPanel(teamId, snapshotId, reshotContext, previousApId) {
   document.getElementById('apPanel').classList.add('visible');
   document.getElementById('apOverlay').classList.add('visible');
   document.getElementById('apMessages').innerHTML = '';
