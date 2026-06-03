@@ -192,6 +192,7 @@ module.exports = async (req, res) => {
         slidesLink: r['Slides Link'] || null,
         reviewDate: r['Review Date'] || '',
         valueCategory: r['Value Category'] || '',
+        snapshotId: r['Snapshot ID'] || '',
       };
     });
 
