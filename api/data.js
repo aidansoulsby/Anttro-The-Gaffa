@@ -214,6 +214,7 @@ module.exports = async (req, res) => {
         actionsSummary: r['Actions Summary'] || '',
         snapshotId: r['Snapshot ID'] || '',
         rawStatus: r['Status'] || '',
+        actionPlanId: r['Action Plan ID'] || '',
       };
     });
 
