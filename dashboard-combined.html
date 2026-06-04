@@ -1936,8 +1936,7 @@ function openActionDetail(rowId, type) {
 
   html += `</div><div class="ad-footer">`;
   if (type === 'snapshot') {
-    const hasAP = (popupData.actionplan||[]).some(a => a.snapshotId === snapshotId);
-    if (!hasAP) {
+    if (row.status === 'SnapShot Complete') {
       html += `<button class="ad-btn-primary" onclick="closeActionDetail();closePopup();openApPanel(_teamId,'${rowId}')">Start ActionPlan</button>`;
     }
     html += `<button class="ad-btn-secondary" onclick="closeActionDetail();handleRowBtn('View Slides','${rowId}','${_teamId}')">View Slides</button>`;
