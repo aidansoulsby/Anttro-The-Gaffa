@@ -1844,7 +1844,7 @@ function openActionDetail(rowId, type) {
   const allRows = [...(popupData.snapshot||[]),...(popupData.actionplan||[]),...(popupData.reshot||[])];
   const row = allRows.find(r => r.id === rowId);
   if (!row) return;
-  const snapshotId = rowId.replace(/-AP\d+$/, '').replace(/-RS\d+$/, '');
+  const snapshotId = rowId.replace(/-RS\d+$/, '').replace(/-AP\d+$/, '');
   const tl = timelineData[snapshotId] || timelineData[rowId];
   const liveActions = (window._liveActions || []).filter(a => {
     // API returns raw sheet headers e.g. 'Action Plan ID', 'Snapshot ID'
@@ -2152,7 +2152,7 @@ function buildJourney(snapshotId) {
 }
 
 function openTimeline2(rowId, type) {
-  const snapshotId = rowId.replace(/-AP\d+$/, '').replace(/-RS\d+$/, '');
+  const snapshotId = rowId.replace(/-RS\d+$/, '').replace(/-AP\d+$/, '');
   const snapRow = (popupData.snapshot||[]).find(r => r.id === snapshotId) || {};
   const title = snapRow.title || '';
   const by = snapRow.by || '';
