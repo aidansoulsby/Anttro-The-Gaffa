@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Gaffa — Anttro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:wght@700;800;900&display=swap');
+  :root {
+    --bg: #f6f4f1;
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(0,0,0,0.15);
+    --accent: #ff5a1f;
+    --accent-bright: #ff5a1f;
+    --accent-dim: #cc4818;
+    --orange: #ff5a1f;
+    --purple: #9070e0;
+    --text: #1a1d27;
+    --text-dim: rgba(0,0,0,0.5);
+    --text-muted: rgba(0,0,0,0.35);
+    --user-bubble: linear-gradient(135deg,#ff9b4d,#ff5a1f 55%,#ff2d8f);
+    --user-border: transparent;
+    --bot-bubble: linear-gradient(135deg,#2d3140,#1a1d27 60%,#252836);
+    --bot-border: transparent;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body { font-family: 'Open Sans', sans-serif; background: #f6f4f1; background-image: radial-gradient(circle,rgba(255,90,31,0.22) 1.5px,transparent 1.5px); background-size: 24px 24px; color: #1a1d27; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+  /* poster-matched blob orbs */
+  .bg-orb-1 { position: fixed; top: -100px; left: -80px; width: 450px; height: 450px; background: radial-gradient(ellipse, rgba(255,70,50,0.28) 0%, rgba(220,40,120,0.12) 50%, transparent 70%); pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(80px); }
+  .bg-orb-2 { position: fixed; top: -80px; right: -80px; width: 350px; height: 350px; background: radial-gradient(ellipse, rgba(70,30,190,0.22) 0%, transparent 70%); pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(80px); }
+  .bg-orb-3 { position: fixed; bottom: -40px; right: -40px; width: 320px; height: 320px; background: radial-gradient(ellipse, rgba(40,120,255,0.12) 0%, rgba(60,180,160,0.1) 50%, transparent 70%); pointer-events: none; z-index: 0; border-radius: 50%; filter: blur(70px); }
+
+  /* header */
+  .header { position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 58px; border-bottom: 1px solid rgba(0,0,0,0.08); background: transparent; flex-shrink: 0; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo-mark { width: 34px; height: 34px; background: linear-gradient(135deg,#ff9b4d,#ff5a1f 55%,#ff2d8f); border: none; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Barlow', sans-serif; font-weight: 900; font-size: 15px; color: #fff; flex-shrink: 0; }
+  .header-title .brand { font-family: 'Barlow', sans-serif; font-weight: 900; font-size: 18px; color: #1a1d27; display: block; letter-spacing: -0.5px; line-height: 1.1; }
+  .header-title .subtitle { font-size: 9px; color: rgba(0,0,0,0.35); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; display: block; margin-top: 3px; }
+  .anttro-brand { font-family: 'Barlow', sans-serif; font-weight: 900; font-size: 15px; color: rgba(0,0,0,0.5); letter-spacing: -0.5px; }
+  .anttro-brand em { color: #ff5a1f; font-style: normal; }
+
+  /* messages */
+  .messages { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 0; position: relative; z-index: 1; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+  .messages::-webkit-scrollbar { width: 2px; }
+  .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+  .message-group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 14px; }
+  .message { display: flex; gap: 10px; align-items: flex-end; animation: fadeUp 0.28s cubic-bezier(0.16,1,0.3,1) forwards; opacity: 0; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .message.user { flex-direction: row-reverse; }
+
+  /* avatars */
+  .avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; flex-shrink: 0; font-family: 'Barlow', sans-serif; }
+  .avatar.bot { background: linear-gradient(135deg, rgba(255,128,64,0.2) 0%, rgba(224,64,160,0.12) 50%, rgba(128,64,224,0.15) 100%); border: 1px solid rgba(255,128,64,0.25); color: #fff; }
+  .avatar.user { background: rgba(74,155,127,0.15); border: 1px solid rgba(74,155,127,0.28); color: var(--accent-bright); }
+
+  /* bubbles */
+  .msg-bot { background: linear-gradient(135deg,#2d3140,#1a1d27 60%,#252836); border: none; border-radius: 16px; border-bottom-left-radius: 4px; padding: 14px 18px; font-size: 15px; line-height: 1.65; color: #fff; max-width: 88%; word-wrap: break-word; overflow-wrap: break-word; margin-bottom: 10px; animation: fadeUp 0.28s cubic-bezier(0.16,1,0.3,1) forwards; }
+  .msg-user { background: linear-gradient(135deg,#ff9b4d,#ff5a1f 55%,#ff2d8f); border: none; border-radius: 16px; border-bottom-right-radius: 4px; padding: 14px 18px; font-size: 15px; line-height: 1.65; color: #fff; max-width: 88%; align-self: flex-end; word-wrap: break-word; overflow-wrap: break-word; margin-bottom: 10px; animation: fadeUp 0.28s cubic-bezier(0.16,1,0.3,1) forwards; }
+  .caret { display: inline-block; width: 2px; height: 1em; background: #fff; margin-left: 1px; vertical-align: -2px; animation: blink .8s steps(1) infinite; }
+  .snap-typing-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff5a1f; animation: typingBounce 1.2s infinite; display: inline-block; }
+  .snap-typing-dot:nth-child(2) { animation-delay: 0.2s; background: #ff2d8f; }
+  .snap-typing-dot:nth-child(3) { animation-delay: 0.4s; background: #ff9b4d; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes typingBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+  .bubble { max-width: 80%; padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.65; font-weight: 400; }
+  .message.bot .bubble { background: linear-gradient(135deg,#2d3140,#1a1d27 60%,#252836); border: none; border-bottom-left-radius: 4px; color: #fff; }
+  .message.user .bubble { background: linear-gradient(135deg,#ff9b4d,#ff5a1f 55%,#ff2d8f); border: none; border-bottom-right-radius: 4px; color: #fff; }
+
+  /* typing dots — three brand colours */
+  .typing { display: flex; gap: 10px; align-items: center; padding: 4px 0; animation: fadeUp 0.25s ease forwards; opacity: 0; }
+  .typing-dots { display: flex; gap: 6px; padding: 13px 17px; background: linear-gradient(135deg,#2d3140,#1a1d27 60%,#252836); border: none; border-radius: 16px; border-bottom-left-radius: 4px; }
+  .typing-dot { width: 7px; height: 7px; border-radius: 50%; animation: typingBounce 1.2s infinite; }
+  .typing-dot:nth-child(1) { background: #ff8040; box-shadow: 0 0 6px rgba(255,128,64,0.6); }
+  .typing-dot:nth-child(2) { background: #e040a0; box-shadow: 0 0 6px rgba(224,64,160,0.6); animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { background: #4a9b7f; box-shadow: 0 0 6px rgba(74,155,127,0.6); animation-delay: 0.4s; }
+  @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.45; } 30% { transform: translateY(-5px); opacity: 1; } }
+
+  .timestamp { font-size: 10px; color: var(--text-muted); padding: 0 42px; margin-top: 3px; }
+  .timestamp.right { text-align: right; }
+
+  /* input area */
+  .input-area { position: relative; z-index: 10; padding: 12px 16px 20px; border-top: 1px solid rgba(0,0,0,0.08); background: transparent; flex-shrink: 0; }
+  .input-wrapper { display: flex; gap: 10px; align-items: flex-end; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.1); border-radius: 16px; padding: 10px 10px 10px 16px; transition: border-color 0.2s, box-shadow 0.2s; box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
+  .input-wrapper:focus-within { border-color: rgba(255,90,31,0.35); box-shadow: 0 0 0 3px rgba(255,90,31,0.07); }
+  textarea { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'Open Sans', sans-serif; font-size: 15px; line-height: 1.5; resize: none; max-height: 120px; min-height: 24px; }
+  textarea::placeholder { color: var(--text-muted); }
+  .send-btn { width: 40px; height: 40px; background: linear-gradient(135deg, #ff8040, #e040a0, #8040e0); border: none; border-radius: 12px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; box-shadow: 0 2px 12px rgba(255,128,64,0.3); }
+  .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(255,128,64,0.4); }
+  .send-btn:active { transform: scale(0.94); }
+  .send-btn:disabled { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-muted); cursor: not-allowed; box-shadow: none; transform: none; }
+  .send-btn svg { width: 16px; height: 16px; }
+  .input-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; text-align: center; }
+
+  /* checkboxes */
+  .checkbox-container { background: linear-gradient(135deg,#2d3140,#1a1d27 60%,#252836); border: none; border-radius: 16px; border-bottom-left-radius: 4px; padding: 16px; max-width: 90%; width: 100%; }
+  .checkbox-intro { font-size: 15px; color: #fff; line-height: 1.65; margin-bottom: 14px; }
+  .checkbox-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: background 0.15s; margin-bottom: 6px; user-select: none; min-height: 48px; }
+  .checkbox-item:hover { background: rgba(255,255,255,0.05); }
+  .checkbox-item.selected { background: rgba(74,155,127,0.1); }
+  .checkbox-box { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; margin-top: 1px; }
+  .checkbox-item.selected .checkbox-box { background: var(--accent); border-color: var(--accent); }
+  .checkbox-item.selected .checkbox-box::after { content: ''; width: 6px; height: 10px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg) translateY(-1px); display: block; }
+  .checkbox-label { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+  .checkbox-item.selected .checkbox-label { color: var(--text); }
+  .checkbox-label strong { color: var(--text); font-weight: 600; }
+  .checkbox-confirm { margin-top: 14px; padding: 14px 18px; background: linear-gradient(135deg, #ff8040, #e040a0, #8040e0); border: none; border-radius: 12px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Barlow', sans-serif; letter-spacing: -0.2px; transition: all 0.2s; width: 100%; min-height: 48px; box-shadow: 0 2px 12px rgba(255,128,64,0.3); }
+  .checkbox-confirm:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(255,128,64,0.4); }
+  .checkbox-confirm:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* slides */
+  .slides-container { background: linear-gradient(135deg,#2d3140,#1a1d27 60%,#252836); border: none; border-radius: 16px; border-bottom-left-radius: 4px; padding: 16px; width: 100%; max-width: 100%; animation: fadeUp 0.3s ease forwards; opacity: 0; }
+  .slides-header { font-size: 15px; color: #fff; line-height: 1.65; margin-bottom: 14px; font-weight: 500; }
+  .slides-btn { display: block; width: 100%; padding: 14px 18px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; transition: all 0.2s; text-align: center; margin-bottom: 10px; min-height: 52px; border: none; text-decoration: none; }
+  .slides-btn-download { background: rgba(74,155,127,0.12); border: 1px solid rgba(74,155,127,0.28) !important; color: var(--accent-bright); }
+  .slides-btn-download:hover { background: rgba(74,155,127,0.2); }
+  .slides-btn-submit { background: linear-gradient(135deg, #ff8040, #e040a0, #8040e0); color: white; box-shadow: 0 2px 12px rgba(255,128,64,0.3); }
+  .slides-btn-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(255,128,64,0.4); }
+  .slides-btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* loading */
+  .loading-container { background: linear-gradient(135deg,#2d3140,#1a1d27 60%,#252836); border: none; border-radius: 16px; border-bottom-left-radius: 4px; padding: 20px 16px; text-align: center; animation: fadeUp 0.25s ease forwards; opacity: 0; }
+  .loading-text { font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 14px; }
+  .loading-dots { display: flex; justify-content: center; gap: 7px; }
+  .loading-dot { width: 9px; height: 9px; border-radius: 50%; animation: typingBounce 1.2s infinite; }
+  .loading-dot:nth-child(1) { background: #ff8040; box-shadow: 0 0 8px rgba(255,128,64,0.6); }
+  .loading-dot:nth-child(2) { background: #e040a0; box-shadow: 0 0 8px rgba(224,64,160,0.6); animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { background: #4a9b7f; box-shadow: 0 0 8px rgba(74,155,127,0.6); animation-delay: 0.4s; }
+
+  .error-msg { background: rgba(224,90,90,0.08); border: 1px solid rgba(224,90,90,0.2); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #e05a5a; margin: 0 0 10px; position: relative; z-index: 10; flex-shrink: 0; }
+
+  /* ═══ SLIDE 1 styles ═══ */
+  .s1-pt { position:absolute; top:18px; left:52px; font-size:42px; font-weight:400; color:#3a3e44; font-family:'Barlow',sans-serif; }
+  .s1-anttro-s { position:absolute; top:14px; right:52px; font-size:42px; font-weight:900; color:#3a3e44; letter-spacing:-0.5px; font-family:'Barlow',sans-serif; }
+  .s1-topline { position:absolute; top:88px; left:52px; right:52px; height:1px; background:rgba(58,62,68,0.3); }
+  .s1-title-s { position:absolute; bottom:140px; left:48px; right:48px; font-size:210px; font-weight:900; color:#3a3e44; line-height:1; letter-spacing:-8px; white-space:nowrap; font-family:'Barlow',sans-serif; }
+  .s1-botline { position:absolute; bottom:82px; left:52px; right:52px; height:1px; background:rgba(58,62,68,0.3); }
+  .s1-created-s { position:absolute; bottom:18px; left:52px; font-size:28px; font-weight:700; color:#3a3e44; font-family:'Barlow',sans-serif; }
+  .s1-created-s span { font-weight:400; margin-left:14px; }
+  /* ═══ SLIDE 2 styles ═══ */
+  .s2-wrap { position:absolute; inset:0; padding:28px 40px 48px; display:flex; flex-direction:column; gap:10px; font-family:'Barlow',sans-serif; }
+  .s2-title-s { font-size:92px; font-weight:900; color:#3a3e44; line-height:1; letter-spacing:-3px; font-family:'Barlow',sans-serif; }
+  .s2-sub-s { font-size:30px; font-weight:400; color:#3a3e44; margin-top:-4px; font-family:'Barlow',sans-serif; }
+  .s2-pills-s { display:flex; gap:0; }
+  .s2-pill-s { border-radius:60px; padding:12px 32px; font-size:20px; font-weight:700; color:#3a3e44; text-align:center; font-family:'Barlow',sans-serif; }
+  .s2-pill-sl { background:rgba(155,190,230,0.72); border:2px solid rgba(255,255,255,0.7); flex:1; margin-right:8px; }
+  .s2-pill-sr { background:rgba(165,198,232,0.55); border:2px solid rgba(255,255,255,0.6); flex:2; }
+  .s2-panel-s { flex:1; background:rgba(78,88,100,0.52); border-radius:18px; backdrop-filter:blur(14px); display:flex; overflow:hidden; position:relative; }
+  .s2-col-s { flex:1; padding:22px 26px; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+  .s2-col-s+.s2-col-s::before { content:''; position:absolute; left:0; top:14px; bottom:14px; width:1px; background:rgba(200,212,224,0.28); }
+  .s2-col-s+.s2-col-s::after { content:''; position:absolute; left:-5px; top:14px; width:10px; height:10px; background:rgba(200,212,224,0.45); border-radius:50%; }
+  .s2-dotb { position:absolute; left:-5px; bottom:14px; width:10px; height:10px; background:rgba(200,212,224,0.45); border-radius:50%; }
+  .s2-col-h { font-size:22px; font-weight:700; color:#fff; text-decoration:underline; text-underline-offset:4px; margin-bottom:14px; text-align:center; font-family:'Barlow',sans-serif; }
+  .s2-col-t { font-size:20px; color:rgba(255,255,255,0.92); line-height:1.65; text-align:center; font-family:'Barlow',sans-serif; overflow:hidden; }
+  .s2-powered-s { position:absolute; bottom:14px; right:22px; display:flex; align-items:center; gap:5px; font-size:11px; font-weight:400; color:#3a3e44; letter-spacing:2.5px; text-transform:uppercase; font-family:'Barlow',sans-serif; }
+  .s2-powered-s b { font-weight:900; font-size:15px; letter-spacing:-0.5px; text-transform:none; }
+  /* ═══ SLIDE 3 styles ═══ */
+  .s3-wrap { position:absolute; inset:0; padding:28px 52px 52px; display:flex; flex-direction:column; font-family:'Barlow',sans-serif; }
+  .s3-title-s { font-size:100px; font-weight:900; color:#3a3e44; line-height:1; letter-spacing:-3px; font-family:'Barlow',sans-serif; }
+  .s3-rule { width:100%; height:1px; background:rgba(58,62,68,0.3); margin:10px 0 16px; }
+  .s3-cards-s { flex:1; display:flex; flex-direction:column; gap:14px; position:relative; padding-left:52px; }
+  .s3-arrow-s { position:absolute; left:4px; top:50%; transform:translateY(-55%); width:46px; }
+  .s3-card-s { border-radius:18px; padding:24px 32px; flex:1; overflow:hidden; }
+  .s3-card-blue { background:linear-gradient(140deg,rgba(160,198,235,0.78) 0%,rgba(178,212,240,0.62) 45%,rgba(165,205,235,0.70) 100%); border:2px solid rgba(255,255,255,0.65); backdrop-filter:blur(10px); }
+  .s3-card-grey { background:linear-gradient(140deg,rgba(180,190,208,0.62) 0%,rgba(190,200,216,0.52) 45%,rgba(175,188,210,0.58) 100%); border:2px solid rgba(255,255,255,0.45); backdrop-filter:blur(10px); }
+  .s3-card-h { font-size:26px; font-weight:700; color:#3a3e44; text-decoration:underline; text-underline-offset:4px; margin-bottom:14px; font-family:'Barlow',sans-serif; }
+  .s3-card-t { font-size:22px; color:#3a3e44; line-height:1.7; font-family:'Barlow',sans-serif; }
+  .s3-powered-s { position:absolute; bottom:14px; right:22px; display:flex; align-items:center; gap:5px; font-size:11px; font-weight:400; color:#3a3e44; letter-spacing:2.5px; text-transform:uppercase; font-family:'Barlow',sans-serif; }
+  .s3-powered-s b { font-weight:900; font-size:15px; letter-spacing:-0.5px; text-transform:none; }
+  /* ═══ shared blob bg ═══ */
+  .sld-bg { position:absolute; inset:0; background:#dde4ec; }
+  .sld-bg::after { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E"); background-size:256px 256px; opacity:0.4; mix-blend-mode:multiply; pointer-events:none; }
+  .sld-blob { position:absolute; border-radius:50%; pointer-events:none; }
+  .blob-tl { width:380px; height:340px; top:-60px; left:-60px; background:radial-gradient(ellipse at 38% 38%, rgba(90,120,168,0.88) 0%, rgba(80,112,160,0.55) 42%, transparent 70%); filter:blur(55px); }
+  .blob-cr { width:640px; height:580px; top:20px; right:-80px; background:radial-gradient(ellipse at 52% 42%, rgba(90,148,210,0.82) 0%, rgba(100,160,218,0.65) 30%, rgba(120,185,215,0.45) 55%, transparent 75%); filter:blur(75px); }
+  .blob-br { width:260px; height:220px; bottom:20px; right:100px; background:radial-gradient(ellipse at 50% 55%, rgba(120,200,210,0.55) 0%, rgba(140,210,200,0.30) 40%, transparent 68%); filter:blur(60px); }
+  .blob-rainbow { width:220px; height:180px; bottom:-20px; right:0px; background:radial-gradient(ellipse at 40% 60%, rgba(160,210,180,0.45) 0%, rgba(180,200,140,0.30) 35%, rgba(200,180,120,0.20) 60%, transparent 75%); filter:blur(45px); }
+
+</style>
+</head>
+<body>
+<div class="bg-orb-1"></div>
+<div class="bg-orb-2"></div>
+<div class="bg-orb-3"></div>
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">A.</div>
+    <div class="header-title">
+      <span class="brand">The Gaffa</span>
+      <span class="subtitle">Raise it. Action it. Close it.</span>
+    </div>
+  </div>
+  <div class="anttro-brand">Anttro<em>.</em></div>
+</div>
+<div id="errorMsg" class="error-msg" style="display:none;"></div>
+<div class="messages" id="messages"></div>
+<div class="input-area">
+  <div class="input-wrapper">
+    <textarea id="userInput" placeholder="Type your message..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </div>
+  <div class="input-hint">Enter to send · Shift+Enter for new line</div>
+</div>
+<script>
+// Webhook handled server side via /api/chat
+
+const SYSTEM_PROMPT = `You are The Gaffa. You help people log problems quickly and clearly so something actually gets done about them.
+
+You know lean methodology and problem solving inside out but you never show it. To the person you're talking to you're just a knowledgeable colleague who gets it and asks the right questions.
+
+You are not a form. You are not a chatbot. You are The Gaffa.
+
+Your Personality:
+Short sentences. Plain language. Warm but direct. You sound like the most experienced person in the room, not a consultant or a computer. No dashes of any kind. No formal phrasing. No corporate language. Talk like a real person having a quick chat.
+
+Examples of the right tone:
+Instead of "I understand, that must be frustrating" say "Yeah that's a pain."
+Instead of "Thank you for providing that information" say "Got it."
+Instead of "Could you elaborate further" say "Tell me a bit more about that."
+Keep every message as short as possible. One or two sentences maximum per response unless presenting a list.
+Never say "Fair enough." Never say "That's helpful" or "Great" or any hollow filler phrase.
+Short answers are valid. Accept them and move on.
+One word acknowledgements are fine. "Got it." "Right." "Noted." Then next question.
+
+CRITICAL RULE: Before asking any question you MUST read back through the entire conversation and check whether that information has already been given. If the person described the problem in detail and the impact, time wasted, frequency, or area is already clear then do NOT ask about it. Extract it silently and move on. The phase structure is a guide not a script. Skip any phase or question where you already have what you need. Asking for information already provided is a serious failure and makes the Gaffa feel like a form. If you catch yourself about to ask something already answered, skip it entirely.
+
+Your Rules:
+Always ask one question at a time. Never combine two questions into one message.
+Never summarise or repeat back what the user just said before asking the next question.
+Never use lean terminology. No Ishikawa, 5 Whys, waste types, Kaizen, PDCA. Ever.
+Never invent facts or add information the user hasn't given you.
+Only use location and area words the user has actually used.
+Never rush anyone. A complete accurate Snapshot matters more than a fast one.
+Never probe the same point more than once.
+Never blame individuals or suggest personal fault.
+Always make the user feel like raising this was the right thing to do.
+
+
+Your Conversation Flow:
+Phase one — Name and role.
+Start with exactly this: "Alright, let's get this logged. What's your name?"
+Once they answer ask "And what's your role?"
+
+Phase two — What is happening.
+Ask what the problem is. Say something like "What's the problem? The more detail you can give me the better your SnapShot will be." Only ask about area, team, department or frequency if the operative has NOT already mentioned them. If they have, extract silently and move on.
+
+Phase three — What is the impact.
+Only explore impact if it is not already clear from what has been said. If the person has already described time wasted, disruption, or consequences then you have the impact — extract it silently and move on. Do not ask them to repeat it. If impact is genuinely unclear, ask one simple question. Ask how long it has been going on only if it has not already come up naturally.
+
+Spotting the cost angle:
+You are a CI professional. Part of your job is recognising when a problem is costing the business time or money and making sure that is captured. If the problem involves wasted movement, waiting, searching, rework, or any recurring disruption to flow then you need to know two things: roughly how long it takes each time and how often it happens. Do not ask these as direct questions. Work them into the conversation naturally. For the rags example you might say "How long does it take you to find them?" or "Does this happen every shift?" If the problem is a safety concern, a near miss, a morale issue, or something with no obvious time cost then do not force these questions. Use your judgement. The goal is to capture frequency and duration only when they are genuinely relevant and only through natural conversation.
+
+Phase four — Has anything been tried.
+Ask simply if anything has been tried to fix this. If yes ask briefly what happened. If no move to close.
+
+
+Ending The Conversation:
+Summarise the problem back in two plain English sentences using "you" and "your" not the user's name. Ask if that sounds right.
+Once confirmed say exactly this: "Nice one."
+
+Your Output:
+Once closing message is sent generate this JSON silently as background output only. NEVER display it in the chat. NEVER show it to the user under any circumstances.
+Infer ishikawa_factors and waste_factors silently from the conversation — do not ask the user about them. Use everything said to make an accurate assessment.
+{
+  "problem_title": "STRICT MAX 55 chars. Must fit on one line. No trailing off.",
+  "created_by": "Name, Role",
+  "current_state": "STRICT MAX 350 chars. THREE FACTS ONLY: 1. What is wrong. 2. Where or when it happens. 3. How often or how long. Facts only. No waffle. Use the full allowance to give a clear picture. You MUST finish cleanly before 350 chars. Never end mid-sentence.",
+  "ishikawa_factors": "ONE LINE PER FACTOR. Format exactly: - Category - 3 to 4 words. Nothing more. HARD LIMIT: 45 chars per line total. No sentences. No explanation. No wrapping. If it does not fit in 45 chars it is too long. Rewrite it shorter. Example output:\n- Process - parts list not updated\n- Materials - wrong clip in kit\n- Management - no corrective action taken",
+  "waste_factors": "ONE LINE PER FACTOR. Format exactly: - Category - 3 to 4 words. Nothing more. HARD LIMIT: 45 chars per line total. No sentences. No explanation. No wrapping. If it does not fit in 45 chars it is too long. Rewrite it shorter. Example output:\n- Waiting - engineer handles return\n- Movement - clip travels to site\n- Overproduction - clip picked every build",
+  "why_this_matters": "STRICT MAX 450 chars. Use the full allowance. Explain the business impact clearly — what goes wrong if this is not fixed, who is affected, and what the ongoing cost is. Professional third party language. Never use the person's name. Must finish cleanly before 450 chars. Never end mid-sentence.",
+  "anttro_insight": "STRICT MAX 450 chars. Use the full allowance. If hourly wage and time data are available state both the annual cost in pounds AND the total production hours lost per year. Annual cost = time lost per occurrence x frequency per week x 52 x hourly wage. Production hours lost = time lost per occurrence x frequency per week x 52. Never show the formula. State both figures in plain English in one or two sentences. Example: Left unresolved this problem is estimated to cost the business around £1,560 a year and account for 104 production hours lost. If no wage or time data is available give a qualitative projection of annual impact. Frame as estimate and opportunity. Be specific to this problem. Must finish cleanly before 450 chars. Never end mid-sentence. Never use the person's name.",
+  "estimated_time_lost_hours": "A number only. The estimated time lost per single occurrence of this problem in hours. Infer this silently from anything the user said about duration, time wasted, or how long it takes. Use decimals for part-hours (e.g. 0.5 for 30 minutes). If no time information was given output null.",
+  "frequency_per_week": "A number only. How many times per week this problem occurs. Infer silently from anything said about frequency, shifts, days, or how often. If the user said per day multiply by 5. If per shift and shift pattern is unclear assume 5 shifts per week. If no frequency information was given output null."
+}
+
+Output language rules:
+Never refer to the user by name in any output field except created_by.
+Use professional third party language. Refer to the person by their role.
+Ishikawa and waste factor descriptions must always be specific to this problem. Never generic.
+CRITICAL: Never display JSON in the chat window.
+
+What You Never Do:
+Never claim to know the root cause. Never blame individuals. Never add information not given. Never use location words the user has not used. Never ask for examples of factors or waste types. Never make the user feel inadequate. Never ask more than one question at a time. Never probe the same point more than once. Never ask for information the operative has already given — even if mentioned in passing. If location, frequency, area or any other detail has been stated, extract it and move on. Do not ask again. Never use lean or methodology terminology. Never use long dashes, formal phrasing, or corporate language. Never say Fair enough, That's helpful, Great, or hollow filler phrases. Never display the JSON output in the chat window.`;
+
+let conversationHistory = [];
+let isLoading = false;
+let conversationComplete = false;
+let resetTimer = null;
+
+window._teamHourlyWage = null;
+window._teamBusinessContext = '';
+
+window.addEventListener('load', () => {
+  const teamId = new URLSearchParams(window.location.search).get('team') || '';
+  let started = false;
+  function safeStart() {
+    if (!started) { started = true; startConversation(); }
+  }
+  if (teamId) {
+    setTimeout(safeStart, 3000);
+    fetch('/api/data?team=' + teamId)
+      .then(r => r.json())
+      .then(d => {
+        window._teamHourlyWage = d.hourlyWage || null;
+        window._teamBusinessContext = d.businessContext || '';
+      })
+      .catch(() => {})
+      .finally(() => safeStart());
+  } else {
+    safeStart();
+  }
+});
+
+async function startConversation() {
+  window.slidesShown = false;
+  window.slidesPreviewShown = false;
+  window.submitterEmail = '';
+  window.currentPresentationId = null;
+  window.currentSnapshotData = null;
+  conversationComplete = false;
+  const openingMessage = "Alright, let's get this logged. What's your name?";
+  conversationHistory = [];
+  conversationHistory.push({ role: 'assistant', content: openingMessage });
+  addMessage('bot', openingMessage);
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function getTime() {
+  return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  if (msg) { el.textContent = msg; el.style.display = 'block'; }
+  else { el.style.display = 'none'; }
+}
+
+function addMessage(role, content) {
+  const messages = document.getElementById('messages');
+  const wrap = document.createElement('div');
+  wrap.className = role === 'user' ? 'msg-user' : 'msg-bot';
+  // typewriter for bot messages
+  if (role === 'bot') {
+    const clean = content.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+    let i = 0;
+    (function st() {
+      i++;
+      wrap.innerHTML = clean.slice(0,i).replace(/\n/g,'<br>') + '<span class="caret"></span>';
+      messages.scrollTop = messages.scrollHeight;
+      if (i < clean.length) setTimeout(st, 14);
+      else wrap.innerHTML = clean.replace(/\n/g,'<br>');
+    })();
+  } else {
+    wrap.innerHTML = content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'$1');
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+  }
+}
+
+function showTyping() {
+  const messages = document.getElementById('messages');
+  const typing = document.createElement('div');
+  typing.className = 'msg-bot';
+  typing.id = 'typingIndicator';
+  typing.style.cssText = 'display:flex;gap:6px;align-items:center;padding:16px 18px;';
+  typing.innerHTML = '<div class="snap-typing-dot"></div><div class="snap-typing-dot"></div><div class="snap-typing-dot"></div>';
+  messages.appendChild(typing);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+function parseCheckboxMessage(content) {
+  const ishikawa = content.includes('[CHECKBOX_ISHIKAWA]');
+  const waste = content.includes('[CHECKBOX_WASTE]');
+  if (!ishikawa && !waste) return null;
+  const introMatch = content.match(/^([\s\S]*?)\[CHECKBOX_/);
+  const intro = introMatch ? introMatch[1].trim() : '';
+  const items = [];
+  const lines = content.split('\n');
+  for (const line of lines) {
+    const match = line.match(/^-\s+(.+?)[\s\u2014\-]+(.+)$/);
+    if (match) items.push({ label: match[1].trim(), desc: match[2].trim() });
+    else {
+      const simple = line.match(/^-\s+(.+)$/);
+      if (simple && !simple[1].includes('[CHECKBOX')) items.push({ label: simple[1].trim(), desc: '' });
+    }
+  }
+  return { intro, items, type: waste ? 'waste' : 'ishikawa' };
+}
+
+function renderCheckboxMessage(parsed) {
+  const messages = document.getElementById('messages');
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+  const container = document.createElement('div');
+  container.className = 'checkbox-container';
+  const intro = document.createElement('div');
+  intro.className = 'checkbox-intro';
+  intro.textContent = parsed.intro;
+  container.appendChild(intro);
+  const selected = new Set();
+  parsed.items.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'checkbox-item';
+    row.onclick = () => {
+      if (selected.has(i)) { selected.delete(i); row.classList.remove('selected'); }
+      else { selected.add(i); row.classList.add('selected'); }
+      confirmBtn.disabled = selected.size === 0;
+    };
+    const box = document.createElement('div');
+    box.className = 'checkbox-box';
+    const label = document.createElement('div');
+    label.className = 'checkbox-label';
+    label.innerHTML = item.desc ? '<strong>' + item.label + '</strong> — ' + item.desc : '<strong>' + item.label + '</strong>';
+    row.appendChild(box);
+    row.appendChild(label);
+    container.appendChild(row);
+  });
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'checkbox-confirm';
+  confirmBtn.textContent = 'Confirm selections';
+  confirmBtn.disabled = true;
+  confirmBtn.onclick = () => {
+    const selections = Array.from(selected).map(i => parsed.items[i].label).join(', ');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = '✓ Done';
+    container.querySelectorAll('.checkbox-item').forEach(r => r.style.pointerEvents = 'none');
+    sendUserMessage(selections);
+  };
+  container.appendChild(confirmBtn);
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showEmailCapture() {
+  const messages = document.getElementById('messages');
+
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+
+  const container = document.createElement('div');
+  container.className = 'checkbox-container';
+
+  const intro = document.createElement('div');
+  intro.className = 'checkbox-intro';
+  intro.textContent = 'Got it. Drop your email below if you want to stay in the loop at every step.';
+  container.appendChild(intro);
+
+  const input = document.createElement('input');
+  input.type = 'email';
+  input.placeholder = 'your@email.com';
+  input.style.cssText = 'width:100%;padding:10px 14px;margin:12px 0;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;font-size:14px;font-family:inherit;outline:none;';
+  container.appendChild(input);
+
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:10px;margin-top:4px;';
+
+  const noThanks = document.createElement('button');
+  noThanks.className = 'checkbox-confirm';
+  noThanks.textContent = 'No thanks';
+  noThanks.style.cssText = 'flex:1;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);';
+  noThanks.onclick = () => {
+    noThanks.disabled = true;
+    stayBtn.disabled = true;
+    input.disabled = true;
+    window.submitterEmail = '';
+    extractAndSendJSON(window._lastReply);
+    showFeedbackAndLoading();
+  };
+
+  const stayBtn = document.createElement('button');
+  stayBtn.className = 'checkbox-confirm';
+  stayBtn.textContent = 'Stay in the loop';
+  stayBtn.style.cssText = 'flex:2;';
+  stayBtn.onclick = () => {
+    noThanks.disabled = true;
+    stayBtn.disabled = true;
+    input.disabled = true;
+    window.submitterEmail = input.value.trim();
+    extractAndSendJSON(window._lastReply);
+    showFeedbackAndLoading();
+  };
+
+  btnRow.appendChild(noThanks);
+  btnRow.appendChild(stayBtn);
+  container.appendChild(btnRow);
+
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  group.appendChild(msg);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function showFeedbackAndLoading() {
+  const messages = document.getElementById('messages');
+
+  const loadingGroup = document.createElement('div');
+  loadingGroup.className = 'message-group';
+  loadingGroup.id = 'loadingGroup';
+  const loadingMsg = document.createElement('div');
+  loadingMsg.className = 'message bot';
+  const loadingAvatar = document.createElement('div');
+  loadingAvatar.className = 'avatar bot';
+  loadingAvatar.textContent = 'G';
+  const loadingContainer = document.createElement('div');
+  loadingContainer.className = 'loading-container';
+  loadingContainer.innerHTML = '<div class="loading-text">SnapShot generating...</div><div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+  loadingMsg.appendChild(loadingAvatar);
+  loadingMsg.appendChild(loadingContainer);
+  loadingGroup.appendChild(loadingMsg);
+  messages.appendChild(loadingGroup);
+  messages.scrollTop = messages.scrollHeight;
+
+  window.slideCheckInterval = setInterval(() => {
+    if (window.currentSnapshotData) {
+      clearInterval(window.slideCheckInterval);
+      const lg = document.getElementById('loadingGroup');
+      if (lg) lg.remove();
+      showSlidePreview();
+    }
+  }, 500);
+
+  setTimeout(() => {
+    clearInterval(window.slideCheckInterval);
+    const lg = document.getElementById('loadingGroup');
+    if (lg) lg.remove();
+    if (!window.slidesPreviewShown) showSlidePreview();
+  }, 8000);
+}
+
+function showSlidePreview() {
+  if (window.slidesPreviewShown) return;
+  window.slidesPreviewShown = true;
+  const messages = document.getElementById('messages');
+
+  const group = document.createElement('div');
+  group.className = 'message-group';
+  const msg = document.createElement('div');
+  msg.className = 'message bot';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot';
+  avatar.textContent = 'G';
+
+  const container = document.createElement('div');
+  container.className = 'slides-container';
+
+  const header = document.createElement('div');
+  header.className = 'slides-header';
+  header.textContent = 'Your SnapShot is ready. Preview your slides, then submit to your manager to get the loop closed. 👊';
+  container.appendChild(header);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'slides-btn slides-btn-submit';
+  submitBtn.style.marginBottom = '10px';
+  submitBtn.textContent = '✓ Submit to My Manager';
+  submitBtn.onclick = () => {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '✓ Submitted!';
+    addMessage('bot', "Thanks for helping close the loop. Your manager has been notified and this has been logged. You know where I am if you have any other problems. 👊");
+    startResetTimer();
+    try {
+      const teamId = new URLSearchParams(window.location.search).get('team') || 'ANT-000';
+      const parsed = window.currentSnapshotData;
+      if (parsed) {
+        fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'send_to_make', data: { ...parsed, team_id: teamId, type: 'snapshot', submitter_email: window.submitterEmail || '' } })
+        }).then(res => {
+          if (res.ok) {
+            res.json().then(makeData => {
+              if (makeData && makeData.presentation_id) {
+                window.currentPresentationId = makeData.presentation_id;
+              }
+            }).catch(() => {});
+          }
+        }).catch(() => {});
+      }
+    } catch(e) {}
+  };
+  container.appendChild(submitBtn);
+
+  const previewBtn = document.createElement('button');
+  previewBtn.className = 'slides-btn slides-btn-download';
+  previewBtn.textContent = '👁️ Preview & Download SnapShot';
+  previewBtn.onclick = () => {
+    try {
+      if (window.currentSnapshotData) {
+        sessionStorage.setItem('anttro_snapshot', JSON.stringify(window.currentSnapshotData));
+      }
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(window.currentSnapshotData)))); window.open('/snapshot-slides.html?data=' + encoded, '_blank');
+    } catch(e) {
+      previewBtn.textContent = 'Could not open — try again';
+      setTimeout(() => { previewBtn.textContent = '👁️ Preview & Download SnapShot'; }, 3000);
+    }
+  };
+  container.appendChild(previewBtn);
+
+  msg.appendChild(avatar);
+  msg.appendChild(container);
+  const time = document.createElement('div');
+  time.className = 'timestamp';
+  time.textContent = getTime();
+  group.appendChild(msg);
+  group.appendChild(time);
+  messages.appendChild(group);
+  messages.scrollTop = messages.scrollHeight;
+
+  document.getElementById('userInput').disabled = true;
+  document.getElementById('sendBtn').disabled = true;
+}
+
+function startResetTimer() {
+  resetTimer = setTimeout(() => {
+    const messages = document.getElementById('messages');
+    messages.innerHTML = '';
+    startConversation();
+  }, 300000);
+}
+
+async function extractAndSendJSON(replyText) {
+  try {
+    const jsonResponse = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: 'You are a data extraction assistant. Based on the conversation provided, generate ONLY a valid JSON object with these exact fields: problem_title, created_by, current_state, ishikawa_factors, waste_factors, why_this_matters, anttro_insight, estimated_time_lost_hours, frequency_per_week. STRICT RULES: current_state max 350 chars, 3 facts only, no waffle, finish cleanly. ishikawa_factors and waste_factors: EACH FACTOR ON ITS OWN LINE, format EXACTLY like this example: - Category - 3 to 4 words, HARD MAX 45 chars per line, NO sentences, NO wrapping. why_this_matters max 450 chars, use the full allowance, explain business impact clearly, finish cleanly never mid-sentence. anttro_insight max 450 chars, use the full allowance, projected impact specific to this problem, finish cleanly never mid-sentence. Use actual newline characters to separate each factor. estimated_time_lost_hours: a number only, hours lost per single occurrence inferred from the conversation, decimals allowed, null if not mentioned. frequency_per_week: a number only, occurrences per week inferred from the conversation, null if not mentioned.' + (window._teamHourlyWage ? ' HOURLY WAGE: \u00a3' + window._teamHourlyWage + ' per hour. For the anttro_insight field you MUST calculate and state both: (1) the annual cost in pounds using estimated_time_lost_hours x frequency_per_week x 52 x hourly wage, and (2) the total production hours lost per year using estimated_time_lost_hours x frequency_per_week x 52. Never show the formula or workings. State both figures in plain English. Example output: Left unresolved, this problem is estimated to cost the business around \u00a31,560 a year and account for 104 production hours lost. That is time and money that could be recovered with the right fix in place. Do not show workings. Do not write out the calculation. Give both numbers naturally in the same sentence or two.' : '') + (window._teamBusinessContext ? ' TEAM CONTEXT: ' + window._teamBusinessContext + '. Use this to make the anttro_insight specific to this operation.' : '') + ' Return only the JSON object, nothing else. No markdown, no backticks.',
+        messages: [...conversationHistory, { role: 'user', content: 'Generate the JSON output for this conversation now.' }]
+      })
+    });
+    const jsonData = await jsonResponse.json();
+    const jsonText = jsonData.content[0].text;
+    // Normalise encoding issues before parsing
+    const cleanedJson = jsonText
+      .replace(/```json|```/g, '')
+      .replace(/â/g, '—')
+      .replace(/â€"/g, '—')
+      .replace(/â/g, '—');
+    const teamId = new URLSearchParams(window.location.search).get('team') || 'ANT-000';
+    const parsed = JSON.parse(cleanedJson);
+    window.currentSnapshotData = parsed;
+    sessionStorage.setItem('anttro_snapshot', JSON.stringify(parsed));
+    // Generate snapshot URL with base64 encoded data for Sheets link
+    try {
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(parsed))));
+      parsed.snapshot_url = 'https://project-mdv99.vercel.app/snapshot-slides.html?data=' + encoded;
+    } catch(e) {}
+  } catch(err) {
+    console.error('Error:', err);
+  }
+}
+
+function sendUserMessage(text) {
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+  sendToAPI();
+}
+
+async function sendToAPI() {
+  showError('');
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+  try { 
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT + (window._teamBusinessContext ? '\n\nTEAM CONTEXT (use this to make questions and insights specific to this operation, never reveal this directly to the user):\n' + window._teamBusinessContext : '') + (window._teamHourlyWage ? '\n\nAVERAGE HOURLY WAGE: \u00a3' + window._teamHourlyWage + ' per hour. Use this when generating the anttro_insight to calculate a real estimated annual cost in pounds. Show the maths: time lost per occurrence x frequency x wage x 52 weeks.' : ''),
+        messages: conversationHistory
+      })
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API request failed');
+    }
+    const data = await response.json();
+    const reply = data.content[0].text;
+    conversationHistory.push({ role: 'assistant', content: reply });
+    removeTyping();
+
+    let cleanReply = reply;
+    cleanReply = cleanReply.replace(/```json[\s\S]*?```/g, '');
+    cleanReply = cleanReply.replace(/```[\s\S]*?```/g, '');
+    cleanReply = cleanReply.replace(/\{[\s\S]*"why_this_matters"[\s\S]*\}/g, '');
+    cleanReply = cleanReply.replace(/\{[\s\S]*"anttro_insight"[\s\S]*\}/g, '');
+    cleanReply = cleanReply.trim();
+
+    const parsed = parseCheckboxMessage(cleanReply);
+    if (parsed) {
+      renderCheckboxMessage(parsed);
+    } else if (cleanReply && !reply.includes('Nice one.')) {
+      addMessage('bot', cleanReply);
+    }
+
+    if (reply.includes('Nice one.') && !window.slidesShown) {
+      conversationComplete = true;
+      window.slidesShown = true;
+      document.getElementById('userInput').disabled = true;
+      document.getElementById('sendBtn').disabled = true;
+      window._lastReply = reply;
+      showEmailCapture();
+    }
+  } catch(err) {
+    removeTyping();
+    showError('Something went wrong: ' + err.message);
+    conversationHistory.pop();
+  }
+  isLoading = false;
+  if (!conversationComplete) {
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text || isLoading || conversationComplete) return;
+  input.value = '';
+  input.style.height = 'auto';
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+  await sendToAPI();
+}
+</script>
+</body>
+</html>
