@@ -6,7 +6,7 @@
 <script>
   (function() {
     const team = new URLSearchParams(window.location.search).get('team') || '';
-    const snapUrl = 'https://project-mdv99.vercel.app/index.html?team=' + team;
+    const snapUrl = 'https://anttro.com/thegaffa-' + team;
     const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(snapUrl);
     document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('qrImg').src = qrSrc;
