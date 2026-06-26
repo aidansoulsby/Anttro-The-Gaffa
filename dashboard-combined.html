@@ -1638,14 +1638,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pcAvatar) pcAvatar.textContent = managerName.charAt(0).toUpperCase();
       }
 
-      // -- TEAM NAME + TITLE --
-      if (teamName) {
-        const pcTeam = document.querySelector('.pc-team');
-        if (pcTeam) pcTeam.textContent = `Team ${_teamId || 'ANT-000'} . ${teamName}`;
-        const titleEl = document.querySelector('h1.title');
-        if (titleEl) titleEl.textContent = 'Dashboard';
-        const titleTeam = document.getElementById('titleTeam');
-        if (titleTeam && teamName) titleTeam.textContent = teamName;
+// -- TEAM NAME + TITLE --
+const pcTeam = document.querySelector('.pc-team');
+if (pcTeam) pcTeam.textContent = teamName ? `Team ${_teamId} · ${teamName}` : '';
+const titleEl = document.querySelector('h1.title');
+if (titleEl) titleEl.textContent = 'Dashboard';
+const titleTeam = document.getElementById('titleTeam');
+if (titleTeam) titleTeam.textContent = teamName || '';
       }
 
       // -- PILL COUNTS - big number is the actionable number --
