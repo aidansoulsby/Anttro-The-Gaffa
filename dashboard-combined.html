@@ -1978,7 +1978,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // -- PAGE LOAD --
-  window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
+    const authed = await initAuth();
+    if (!authed) return;
     // Start data load immediately in background
     const dataPromise = loadDashboardData();
 
