@@ -1,9 +1,0 @@
-{
-  "routes": [
-    { "src": "/", "dest": "/landing.html" },
-    { "src": "/dashboard-([^/]+)", "dest": "/dashboard-combined.html?team=$1" },
-    { "src": "/poster-([^/]+)", "dest": "/anttro-poster.html?team=$1" },
-    { "src": "/thegaffa-([^/]+)", "dest": "/index.html?team=$1" },
-    { "src": "/slides-([^/]+)", "dest": "/snapshot-slides.html?team=$1" }
-  ]
-}
