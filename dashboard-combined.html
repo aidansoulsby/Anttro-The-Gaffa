@@ -1639,8 +1639,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 12000);
-      const url = _teamId ? `/api/data?team=${_teamId}` : '/api/data';
-      const res = await fetch(url, { signal: controller.signal });
+      const res = await fetch('/api/data', {
+        signal: controller.signal,
+        headers: { 'Authorization': `Bearer ${_clerkToken}` }
+      });
       clearTimeout(timeout);
       if (!res.ok) throw new Error('API not available');
       const data = await res.json();
