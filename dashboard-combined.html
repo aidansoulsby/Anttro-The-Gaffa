@@ -662,10 +662,29 @@
   </div>
 </div>
 
+<script async crossorigin="anonymous"
+  data-clerk-publishable-key="pk_test_d2lubmluZy1kYXNzaWUtNDMuY2xlcmsuYWNjb3VudHMuZGV2JA"
+  src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  type="text/javascript">
+</script>
+
 <script>
-  // -- TEAM ID FROM URL --
-  const _pathMatch = window.location.pathname.match(/\/dashboard-(.+)$/);
-  const _teamId = _pathMatch ? _pathMatch[1] : (new URLSearchParams(window.location.search).get('team') || '');
+  // -- AUTH + TEAM ID --
+  let _clerkToken = null;
+  let _teamId = '';
+
+  async function initAuth() {
+    let attempts = 0;
+    while (!window.Clerk && attempts < 20) {
+      await new Promise(r => setTimeout(r, 200));
+      attempts++;
+    }
+    if (!window.Clerk) { window.location.href = '/login'; return false; }
+    await window.Clerk.load();
+    if (!window.Clerk.user) { window.location.href = '/login'; return false; }
+    _clerkToken = await window.Clerk.session.getToken();
+    return true;
+  }
 
   // -- BRIEF STATE --
   let _managerName = 'there';
