@@ -687,6 +687,11 @@
     return true;
   }
 
+    async function signOut() {
+    await window.Clerk.signOut();
+    window.location.href = '/login';
+  }
+
   // -- BRIEF STATE --
   let _managerName = 'there';
   let _briefLoaded = false;
