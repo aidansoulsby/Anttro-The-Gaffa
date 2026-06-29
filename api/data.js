@@ -34,7 +34,7 @@ async function getTeamIdFromSession(req) {
     const user = await clerkClient.users.getUser(userId);
     return user.publicMetadata?.teamId || user.privateMetadata?.teamId || null;
   } catch (err) {
-    console.error('Session verification failed:', err.message);
+    console.error('Session verification failed:', err.message, err.code, JSON.stringify(err.errors));
     return null;
   }
 }
