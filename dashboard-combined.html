@@ -1645,6 +1645,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 12000);
+      if (!_clerkToken && window.Clerk?.session) {
+        _clerkToken = await window.Clerk.session.getToken();
+      }
+      if (!_clerkToken) { window.location.href = '/login'; return; }
       const res = await fetch('/api/data', {
         signal: controller.signal,
         headers: { 'Authorization': `Bearer ${_clerkToken}` }
