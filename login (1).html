@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anttro — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;font-family:'Open Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+
+  .bg{
+    position:fixed;inset:0;z-index:0;
+    background:#f6f4f1 url('https://raw.githubusercontent.com/aidansoulsby/Anttro-The-Gaffa/main/img-graphic-2.png') center center / cover no-repeat;
+  }
+
+  .wrap{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+
+  .card{
+    background:#1d1f24;
+    border-radius:22px;
+    padding:48px 44px 44px;
+    width:100%;max-width:420px;
+    text-align:center;
+    box-shadow:0 8px 48px rgba(0,0,0,0.32);
+  }
+
+  .logo{font-family:'Barlow',sans-serif;font-weight:900;font-size:30px;color:#ffffff;letter-spacing:-0.03em;margin-bottom:6px;}
+  .logo span{color:#ff5a1f;}
+  .tagline{font-size:12px;color:rgba(255,255,255,0.4);font-weight:500;margin-bottom:32px;letter-spacing:0.04em;}
+  .divider{height:1px;background:rgba(255,255,255,0.1);margin-bottom:28px;}
+
+  .card-title{font-family:'Barlow',sans-serif;font-weight:800;font-size:22px;color:#ffffff;margin-bottom:6px;}
+  .card-sub{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:24px;line-height:1.6;}
+
+  label{display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:7px;text-align:left;}
+
+  input[type=email]{
+    width:100%;padding:13px 15px;
+    border:1.5px solid rgba(255,255,255,0.15);
+    border-radius:10px;
+    font-family:'Open Sans',sans-serif;font-size:15px;
+    color:#ffffff;background:rgba(255,255,255,0.08);
+    outline:none;transition:border-color .15s;
+  }
+  input[type=email]:focus{border-color:#ff5a1f;}
+  input[type=email]::placeholder{color:rgba(255,255,255,0.25);}
+
+  input[type=text]{
+    width:100%;padding:13px 15px;
+    border:1.5px solid rgba(255,255,255,0.15);
+    border-radius:10px;
+    font-family:'Open Sans',sans-serif;font-size:24px;font-weight:700;
+    color:#ffffff;background:rgba(255,255,255,0.08);
+    outline:none;transition:border-color .15s;
+    letter-spacing:0.2em;text-align:center;
+  }
+  input[type=text]:focus{border-color:#ff5a1f;}
+
+  .btn{
+    display:block;width:100%;margin-top:14px;padding:14px;
+    border:none;border-radius:10px;
+    background:#ff5a1f;color:#ffffff;
+    font-family:'Barlow',sans-serif;font-weight:800;font-size:16px;
+    cursor:pointer;transition:opacity .15s;
+  }
+  .btn:hover{opacity:0.88;}
+  .btn:disabled{opacity:0.45;cursor:not-allowed;}
+
+  .msg{margin-top:16px;padding:12px 15px;border-radius:10px;font-size:13px;font-weight:600;line-height:1.5;display:none;text-align:left;}
+  .msg.success{background:rgba(26,122,74,0.25);color:#6ee7b7;display:block;}
+  .msg.error{background:rgba(185,28,28,0.25);color:#fca5a5;display:block;}
+
+  .code-section{display:none;}
+  .back-link{display:block;text-align:center;margin-top:18px;font-size:13px;color:rgba(255,255,255,0.35);cursor:pointer;transition:color .15s;}
+  .back-link:hover{color:#ff5a1f;}
+
+  .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="logo">Anttro<span>.</span></div>
+    <div class="tagline">Raise it. Action it. Close it.</div>
+    <div class="divider"></div>
+
+    <!-- Step 1: Email -->
+    <div id="stepEmail">
+      <div class="card-title">Sign in to your dashboard</div>
+      <div class="card-sub">Enter your email and we will send you a one-time code to sign in.</div>
+      <label for="emailInput">Email address</label>
+      <input type="email" id="emailInput" placeholder="you@yourcompany.com" autocomplete="email" />
+      <button class="btn" id="sendBtn" onclick="sendCode()">Send sign-in code</button>
+      <div class="msg" id="emailMsg"></div>
+    </div>
+
+    <!-- Step 2: Code -->
+    <div class="code-section" id="stepCode">
+      <div class="card-title">Check your email</div>
+      <div class="card-sub" id="codeSubText">We sent a 6-digit code to your email. Enter it below.</div>
+      <label for="codeInput">Sign-in code</label>
+      <input type="text" id="codeInput" placeholder="000000" maxlength="6" inputmode="numeric" />
+      <button class="btn" id="verifyBtn" onclick="verifyCode()">Sign in</button>
+      <div class="msg" id="codeMsg"></div>
+      <span class="back-link" onclick="resetToEmail()">Use a different email</span>
+    </div>
+  </div>
+</div>
+
+<script async crossorigin="anonymous"
+  data-clerk-publishable-key="pk_test_d2lubmluZy1kYXNzaWUtNDMuY2xlcmsuYWNjb3VudHMuZGV2JA"
+  src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  type="text/javascript">
+</script>
+
+<script>
+  let clerk;
+  let signInAttempt;
+
+  window.addEventListener('load', async () => {
+    let attempts = 0;
+    while (!window.Clerk && attempts < 20) {
+      await new Promise(r => setTimeout(r, 200));
+      attempts++;
+    }
+    if (!window.Clerk) {
+      showMsg('emailMsg', 'error', 'Failed to load authentication. Please refresh the page.');
+      return;
+    }
+    clerk = window.Clerk;
+    await clerk.load();
+    if (clerk.user) {
+      window.location.href = '/dashboard';
+    }
+  });
+
+  async function sendCode() {
+    const email = document.getElementById('emailInput').value.trim();
+    if (!email) {
+      showMsg('emailMsg', 'error', 'Please enter your email address.');
+      return;
+    }
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Sending...';
+    clearMsg('emailMsg');
+    try {
+      signInAttempt = await clerk.client.signIn.create({
+        identifier: email,
+        strategy: 'email_code',
+      });
+      document.getElementById('stepEmail').style.display = 'none';
+      document.getElementById('stepCode').style.display = 'block';
+      document.getElementById('codeSubText').textContent = 'We sent a 6-digit code to ' + email + '. Enter it below.';
+      document.getElementById('codeInput').focus();
+    } catch (err) {
+      const msg = err.errors?.[0]?.message || 'Something went wrong. Please try again.';
+      if (msg.toLowerCase().includes('no user') || msg.toLowerCase().includes('not found') || msg.toLowerCase().includes("couldn't find")) {
+        showMsg('emailMsg', 'error', 'That email address is not registered with Anttro. Contact your administrator.');
+      } else {
+        showMsg('emailMsg', 'error', msg);
+      }
+      btn.disabled = false;
+      btn.textContent = 'Send sign-in code';
+    }
+  }
+
+  async function verifyCode() {
+    const code = document.getElementById('codeInput').value.trim();
+    if (!code || code.length < 6) {
+      showMsg('codeMsg', 'error', 'Please enter the 6-digit code from your email.');
+      return;
+    }
+    const btn = document.getElementById('verifyBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Signing in...';
+    clearMsg('codeMsg');
+    try {
+      const result = await signInAttempt.attemptFirstFactor({
+        strategy: 'email_code',
+        code,
+      });
+      if (result.status === 'complete') {
+        await clerk.setActive({ session: result.createdSessionId });
+        window.location.href = '/dashboard';
+      } else {
+        showMsg('codeMsg', 'error', 'Sign in incomplete. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    } catch (err) {
+      const msg = err.errors?.[0]?.message || 'Invalid code. Please try again.';
+      if (msg.toLowerCase().includes('incorrect') || msg.toLowerCase().includes('invalid')) {
+        showMsg('codeMsg', 'error', 'That code is incorrect. Please check your email and try again.');
+      } else if (msg.toLowerCase().includes('expired')) {
+        showMsg('codeMsg', 'error', 'That code has expired. Go back and request a new one.');
+      } else {
+        showMsg('codeMsg', 'error', msg);
+      }
+      btn.disabled = false;
+      btn.textContent = 'Sign in';
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('stepCode').style.display === 'block') {
+      verifyCode();
+    } else {
+      sendCode();
+    }
+  });
+
+  function resetToEmail() {
+    document.getElementById('stepCode').style.display = 'none';
+    document.getElementById('stepEmail').style.display = 'block';
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('sendBtn').textContent = 'Send sign-in code';
+    clearMsg('emailMsg');
+    signInAttempt = null;
+  }
+
+  function showMsg(id, type, text) {
+    const el = document.getElementById(id);
+    el.className = 'msg ' + type;
+    el.textContent = text;
+  }
+
+  function clearMsg(id) {
+    const el = document.getElementById(id);
+    el.className = 'msg';
+    el.textContent = '';
+  }
+</script>
+</body>
+</html>
