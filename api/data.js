@@ -1,5 +1,5 @@
 const { google } = require('googleapis');
-const Clerk = require('@clerk/backend');
+const { createClerkClient, verifyToken } = require('@clerk/backend');
 
 const SHEET_ID = '1X-1nLKpxBlFX636pSF-TI4SqNnC0DMSLt2eZjWGF-DA';
 
