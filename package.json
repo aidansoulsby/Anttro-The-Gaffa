@@ -2,6 +2,7 @@
   "name": "anttro-the-gaffa",
   "version": "1.0.0",
   "dependencies": {
-    "googleapis": "^140.0.0"
+    "googleapis": "^140.0.0",
+    "@clerk/backend": "^1.0.0"
   }
 }
