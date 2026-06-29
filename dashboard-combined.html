@@ -1674,7 +1674,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      const { teamName, managerName, stats, rows } = data;
+      const { teamName, managerName, stats, rows } = data;       _teamId = data.teamId || _teamId;
 
       // -- MANAGER NAME --
       if (managerName) {
