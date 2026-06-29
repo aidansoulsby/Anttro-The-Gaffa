@@ -401,6 +401,22 @@
 </style>
 </head>
 <body>
+<div id="mobileBlock" style="display:none;position:fixed;inset:0;z-index:9999;background:#f6f4f1 url('https://raw.githubusercontent.com/aidansoulsby/Anttro-The-Gaffa/main/img-graphic-2.png') center center / cover no-repeat;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:#1d1f24;border-radius:22px;padding:48px 40px 44px;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 48px rgba(0,0,0,0.32);">
+    <div style="font-family:'Barlow',sans-serif;font-weight:900;font-size:28px;color:#ffffff;letter-spacing:-0.03em;margin-bottom:6px;">Anttro<span style="color:#ff5a1f;">.</span></div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);font-weight:500;margin-bottom:28px;font-family:'Open Sans',sans-serif;">Raise it. Action it. Close it.</div>
+    <div style="height:1px;background:rgba(255,255,255,0.1);margin-bottom:28px;"></div>
+    <div style="font-family:'Barlow',sans-serif;font-weight:800;font-size:20px;color:#ffffff;margin-bottom:10px;">Built for desktop</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;font-family:'Open Sans',sans-serif;">The Anttro dashboard is designed for desktop. Open it on your computer for the full experience.</div>
+  </div>
+</div>
+
+<script>
+  if (window.innerWidth < 768) {
+    document.getElementById('mobileBlock').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+</script>
 <div class="bloom"></div>
 
 <!-- ===== LOADER ===== -->
