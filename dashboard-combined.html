@@ -3057,7 +3057,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeInsights(){
     document.getElementById('insights').classList.remove('open');
     ['ph1','ph2','ph3','ph4'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=''; });
-    document.getElementById('dockChips').style.display = 'none';
+    const dockChips = document.getElementById('dockChips'); if (dockChips) dockChips.style.display = 'none';
   }
 
   function setPeriod(p){
